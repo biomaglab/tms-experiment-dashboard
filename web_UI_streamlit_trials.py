@@ -3,10 +3,8 @@
 
 # for local server, start with: python.exe relay_server.py 127.0.0.1 5000
 # for remote server, start with : python.exe  relay_server.py {remote_ip} 5000 
-
 # start in terminal with:
 # streamlit run ./web_UI_streamlit_trials.py
-
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -18,7 +16,7 @@ import threading
 import queue
 import time
 import socketio
-import altair as alt
+
 import os
 import csv
 
@@ -27,7 +25,8 @@ from dataclasses import dataclass
 from PIL import Image
 from threading import Lock
 from tweaker import st_tweaker
-from streamlit_cropper import st_cropper
+import altair as alt
+#from streamlit_cropper import st_cropper
 
 @dataclass
 class Dashboard():
@@ -258,9 +257,9 @@ def save_file(file_name):
 
 if __name__ == '__main__':
     
-    path_images = path_images = "C:\\Users\\bioma\\Documents\\CEPID2024\\dashboard_transfer\\tms-robot-control\\images\\"
+    path_images = "C:\\Users\\bioma\\Documents\\GitHub\\tms-experiment-dashboard\\images\\"
 
-    rc1 = RemoteControl("http://127.0.0.1:5000")
+    rc1 = RemoteControl("http://127.0.1.1:5000")
     #rc1 = RemoteControl("http://192.168.200.240:5000") #Tesla
     #rc2 = RemoteControl("http://192.168.200.201:5000")
     #rc1 = RemoteControl("http://169.254.100.20:5000") #Thais
@@ -354,9 +353,9 @@ if __name__ == '__main__':
 
         # Input fields
         for key, value in fields.items():
-            fields[key] = st.text_area(key.replace("_", " ").capitalize(), value, height=20)
+            fields[key] = st.text_area(key.replace("_", " ").capitalize(), value, height=90)
 
-        file_name = st.text_area("File name:", "experiment_details.csv", height=10)
+        file_name = st.text_area("File name:", "experiment_details.csv", height=90)
         save_button =  st.button("Save", key="save_file_button")
 
         if save_button and not st.session_state.file_saved:
@@ -371,8 +370,9 @@ if __name__ == '__main__':
 
     # Expander for the dashboard Main Functions
     with st.expander("Dashboard Main Functions", expanded=True):
-        col1, col2, col3 = st.columns([0.15,0.30,0.4])
-        with col1:
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Conections", "Transformation", "Control", "Navigation", "Stimulation", "Info"])
+
+        with tab1: # Connections
             st.markdown("""
                 <style>
                 .centered {
@@ -385,49 +385,35 @@ if __name__ == '__main__':
                 </style>
                 """, unsafe_allow_html=True)
         
-            st.markdown("<h3 style='text-align:center'>Conections</h4>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align:center'>Connections</h4>", unsafe_allow_html=True)
     
             with st.container(border=True):
-                st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Project</p>", unsafe_allow_html=True)
+                col1, col2, col3, col4 = st.columns([0.1,0.1,0.1,0.1])
                 
-                image = Image.open(path_images + 'computer_icon.jpg')
-                # inverted_image = PIL.ImageOps.invert(image)
-                # Center the image using st.image with a container for layout
-                st.image(image, width=80, use_column_width=True)
+                with col1:
+                    st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Project</p>", unsafe_allow_html=True)
+                    image = Image.open(path_images + 'computer_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
 
-                #st.image('/home/iana/tms-robot-control/camera_icon.jpg', width=100)
-                st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Camera</p>", unsafe_allow_html=True)
-                image = Image.open(path_images + 'camera_icon.jpg')
-                inverted_image = PIL.ImageOps.invert(image)
-                st.image(image, width=80, use_column_width=True)
+                with col2:
+                    #st.image('/home/iana/tms-robot-control/camera_icon.jpg', width=100)
+                    st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Camera</p>", unsafe_allow_html=True)
+                    image = Image.open(path_images + 'camera_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
 
-                #ColourWidgetText('Camera', '#FF0000')
+                with col3:
+                    #st.image('/home/iana/tms-robot-control/robot_icon.jpg', width=100)
+                    st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Robot</p>", unsafe_allow_html=True)
+                    image = Image.open( path_images + 'robot_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
 
-                #st.image('/home/iana/tms-robot-control/robot_icon.jpg', width=100)
-                st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Robot</p>", unsafe_allow_html=True)
-                image = Image.open( path_images + 'robot_icon.jpg')
-                inverted_image = PIL.ImageOps.invert(image)
-                st.image(image, width=80, use_column_width=True)
+                with col4:
+                    #st.image('/home/iana/tms-robot-control/TMS_icon.jpg', width=100)
+                    st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>TMS</p>", unsafe_allow_html=True)
+                    image = Image.open(path_images + 'TMS_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
 
-                #ColourWidgetText('Robot', '#FF0000')
-
-                #st.image('/home/iana/tms-robot-control/TMS_icon.jpg', width=100)
-                st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>TMS</p>", unsafe_allow_html=True)
-                image = Image.open(path_images + 'TMS_icon.jpg')
-                inverted_image = PIL.ImageOps.invert(image)
-                st.image(image, width=80, use_column_width=True)
-
-                #ColourWidgetText('TMS', '#FF0000')
-        
-        with col2:
-            st.markdown("<h2 style='text-align:center'>Execution</h4>", unsafe_allow_html=True)
-            with st.container(border=True):
-                st.markdown("<h5 style='text-align:center'>3D target set</h5>", unsafe_allow_html=True)
-                st.markdown("<h5 style='text-align:center'>Robot moving</h5>", unsafe_allow_html=True)
-                st.markdown("<h5 style='text-align:center'>Coil at target</h5>", unsafe_allow_html=True)
-                st.markdown("<h5 style='text-align:center'>Trials started</h5>", unsafe_allow_html=True)
-                st.markdown("<h5 style='text-align:center'> </h5>", unsafe_allow_html=True)
-
+        with tab2: # Transformations
             st.markdown("<h3 style='text-align:center'>Transformation</h4>", unsafe_allow_html=True)
             with st.container(border=True):
                 st.markdown("<h4 style='text-align:center'>Image fiducials</h4>", unsafe_allow_html=True)
@@ -466,7 +452,33 @@ if __name__ == '__main__':
                 #                    disabled=False, max_chars=5000)
                 #st_tweaker.writetext(label = "My label", id = "my-element-id")
 
-        with col3:
+        with tab3: # 
+            st.markdown("<h2 style='text-align:center'>Execution</h4>", unsafe_allow_html=True)
+            with st.container(border=True):
+                col5, col6, col7, col8 = st.columns([0.1,0.1,0.1,0.1])
+
+                with col5:
+                    st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>3D target set</p>", unsafe_allow_html=True)
+                    image = Image.open(path_images + 'target_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
+
+                with col6:
+                    st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Robot moving</p>", unsafe_allow_html=True)
+                    image = Image.open(path_images + 'move_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
+
+
+                with col7:
+                    st.markdown("<h5 style='text-align:center'>Coil at target</h5>", unsafe_allow_html=True)
+                    image = Image.open(path_images + 'coil_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
+
+                with col8:
+                    st.markdown("<h5 style='text-align:center'>Trials started</h5>", unsafe_allow_html=True)
+                    image = Image.open(path_images + 'trials_icon.jpg')
+                    st.image(image, width=80, use_container_width=True)
+
+        with tab5: # Stimulation
             st.markdown("<h2 style='text-align:center'>Stimulation</h4>", unsafe_allow_html=True)
             with st.container(border=True):# Input for number of trials
                 total_trials = st.number_input("Enter the total number of trials", min_value=1, max_value=1000, value=70)
@@ -516,6 +528,22 @@ if __name__ == '__main__':
                 #mensagem, current_trial = r.get_nowait()
                 st.altair_chart(chart)
 
+        with tab6: # Information
+            st.markdown("""
+                <style>
+                .centered {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+        
+            st.markdown("<h3 style='text-align:center'>Information</h4>", unsafe_allow_html=True)
+
+        with tab4: # Navigation
             st.markdown("<h2 style='text-align:center'>Navigation</h4>", unsafe_allow_html=True)
             with st.container(border=False):# Input for number of trials
                 #fig, ax = plt.subplots()
@@ -574,7 +602,6 @@ if __name__ == '__main__':
                             q.task_done()
                     except queue.Empty:
                         continue
-    '''
-                    with placeholder2.container():
-                        update_dashboard()'''
+
+
 
