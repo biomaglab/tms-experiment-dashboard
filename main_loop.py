@@ -215,6 +215,7 @@ if __name__ == '__main__':
         config=config,
         site_config=site_config,
         robot_config=robot_config,
+        connection = None
     )
 
     previous_success = False

@@ -243,22 +243,10 @@ def ColourWidgetText(wgt_txt, wch_colour = '#000000'):
     htmlstr = htmlstr.replace('|wgt_txt|', "'" + wgt_txt + "'")
     components.html(f"{htmlstr}", height=0, width=0)
 
-@st.fragment
-def save_file(file_name):
-    time.sleep(2)  # Simulating a save operation that takes some time
-    # Save logic in CSV format with quotes
-    with open(file_name, "w", newline='', encoding='utf-8') as f:
-        writer = csv.writer(f, quoting=csv.QUOTE_ALL)  # Quote all fields
-        # Write header
-        writer.writerow(fields.keys())
-        # Write data
-        writer.writerow(fields.values())
-    st.session_state.file_saved = True  # Mark that the file is saved
-
 if __name__ == '__main__':
     
     main_path = "C:\\Users\\bioma\\Documents\\GitHub\\tms-experiment-dashboard\\"
-    path_images = "C:\\Users\\bioma\\Documents\\GitHub\\tms-experiment-dashboard\\images\\"
+    path_images = "C:\\Users\\bioma\\Documents\\GitHub\\tms-experiment-dashboard\\static\\"
 
     rc1 = RemoteControl("http://127.0.0.1:5000")
     #rc1 = RemoteControl("http://192.168.200.240:5000") #Tesla
@@ -343,7 +331,7 @@ if __name__ == '__main__':
 
     # New expander for user input fields
 
-    @st.fragment
+
     def experiment_tab():
 
         exp_expander = st.expander("Experiment details", expanded=False)
@@ -411,16 +399,16 @@ if __name__ == '__main__':
             writer.writerow(fields.values())
         st.success("User input saved successfully.")
         
-    @st.fragment
+    
     def main_tab():
         
         global counter
-
+        
         # Expander for the dashboard Main Functions
 
         with st.expander("Dashboard Main Functions", expanded=False):
             tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Conections", "Transformation", "Control", "Navigation", "Stimulation", "Info"])
-
+            st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Project</p>", unsafe_allow_html=True)
             with tab1: # Connections
                 st.markdown("""
                     <style>
@@ -445,9 +433,9 @@ if __name__ == '__main__':
                         st.image(image, width=80, use_container_width=True)
 
                     with col2:
-                        #st.image('/home/iana/tms-robot-control/camera_icon.jpg', width=100)
+                        #st.image('/home/iana/tms-robot-control/cam_icon.jpg', width=100)
                         st.markdown("<p style='text-align:center; font-size:20px; font-weight:bold;'>Camera</p>", unsafe_allow_html=True)
-                        image = Image.open(path_images + 'camera_icon.jpg')
+                        image = Image.open(path_images + 'cam_icon.jpg')
                         st.image(image, width=80, use_container_width=True)
 
                     with col3:
@@ -528,7 +516,6 @@ if __name__ == '__main__':
                         st.image(image, width=80, use_container_width=True)
 
             with tab5: # Stimulation
-                @st.fragment
                 def stimulation_tab():
                     st.markdown("<h2 style='text-align:center'>Stimulation</h4>", unsafe_allow_html=True)
                     with st.container(border=True):# Input for number of trials
@@ -582,7 +569,7 @@ if __name__ == '__main__':
                 stimulation_tab()
 
             with tab6: # Information
-                @st.fragment
+
                 def parameter_tab():
                     st.markdown("""
                     <style>
@@ -689,6 +676,7 @@ if __name__ == '__main__':
                                 q.task_done()
                         except queue.Empty:
                             continue
+                update_dashboard()
 
     main_tab()
 

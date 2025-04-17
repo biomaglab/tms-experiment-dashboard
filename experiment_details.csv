@@ -1,2 +1,0 @@
-"Experiment_name","Experiment_description","Start_date","End_date","Experiment_title","Experiment_description_details","File_name"
-"Paired pulse, dual site, bilateral, leftM1-rightPMv","Dual site paired bilateral TMS stimulation, with 2 channel EMG acquisition. 80 trials, 4 experimental conditions, 200 pulses","2025-01-31","2024-02-01","Paired pulse contralateral conditioning","Paradigm with motor mapping totaling 80 trials with 20 pulses/condition. Target muscle: APB. Inter-pulse interval: 7 to 10 s.","experiment_details.csv"
