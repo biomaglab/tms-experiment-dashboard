@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from nicegui import ui
 from nicegui.elements.label import Label
 import numpy as np
@@ -7,19 +10,40 @@ import csv
 import os
 import math
 import time
+from datetime import datetime
 import socketio
 import threading
 from threading import Lock
 import queue
 
-global robot_messages
-global distance
+# for local testing:
+# 1. run relay_server in VSCode terminal using:  
+# "python.exe relay_server.py 127.0.0.1 5000"
+# 2. in a separate environment, run InVesalius3 using:  
+# "C:/Users/bioma/anaconda3/envs/invesalius/python.exe c:/Users/bioma/Documents/GitHub/invesalius3/app.py --remote-host http://localhost:5000
+# 3. run main_nicegui in VSCode terminal using: 
+# "C:/Users/bioma/anaconda3/envs/tms_dashboard/python.exe c:/Users/bioma/Documents/GitHub/tms-experiment-dashboard/main_nicegui.py"
+# 
+# for remote connection:
+# using sudo sh ../rede_biomag.sh
+# start in terminal with:
+# streamlit run /static/web_UI_streamlit.py 192.168.200.201 5000
+# 
 
 # Define variaveis
+global robot_messages
+global distance_0
+global distance_x
+global distance_y
+global distance_z
+
 CSV_FILE = 'nice_details.csv'
-distance = 0
-robot_messages = {'Set target mode', 'Open navigation menu', 'Close Project', 'Project loaded successfully', 'Set image fiducial', 'Reset image fiducials', 'Set robot transformation matrix', 'Set target', 'Tracker fiducials set', 'Set objective', 'Unset target', 'Remove sensors ID', 'Reset tracker fiducials', 'Robot connection status','Reset image fiducials', 'Disconnect tracker', 'Tracker changed', 'From Neuronavigation: Update tracker poses','Coil at target', 'Update displacement to target', 'Trials started', 'Trial triggered'}
-textos = ['Project', 'Robot', 'Camera', 'TMS', 'Left Fiducial', 'Nasion', 'Right Fiducial', 'Left Tragus', 'Nose', 'Right Tragus', 'Target', 'Coil', 'Moving', 'Trials']
+distance_0 = 0
+distance_x = 0
+distance_y = 0
+distance_z = 0
+robot_messages = {'Set target mode', 'Open navigation menu', 'Close Project', 'Project loaded successfully', 'Set image fiducial', 'Reset image fiducials', 'Set robot transformation matrix', 'Set target', 'Tracker fiducials set', 'Set objective', 'Unset target', 'Remove sensors ID', 'Reset tracker fiducials', 'Robot connection status','Reset image fiducials', 'Disconnect tracker', 'Tracker changed', 'From Neuronavigation: Update tracker poses','Coil at target', 'Neuronavigation to Robot: Update displacement to target', 'Trials started', 'Trial triggered', 'Stop navigation'}
+textos = ['Project', 'Robot', 'Camera', 'TMS', 'Left Fiducial', 'Nasion', 'Right Fiducial', 'Left Tragus', 'Nose', 'Right Tragus', 'Target', 'Coil', 'Moving', 'Trials', 'Navigation stopped']
 labels: dict[str, Label] = {}
 
 # Se o arquivo não existir ainda, cria com cabeçalho
@@ -143,7 +167,11 @@ class RemoteControl:
 def get_navigation_status():
     global target_status
     #global fiducial_counter
-    global distance
+    global distance_0
+    global distance_0
+    global distance_x
+    global distance_y
+    global distance_z
     buf = rc1.get_buffer()
 
     #print(buf)
@@ -155,10 +183,11 @@ def get_navigation_status():
         for i in range(len(buf)):
             if topic[i] in robot_messages:
                 target_status = buf[i]["data"]
-            #if topic[i] != "From Neuronavigation: Update tracker poses":
-                #print(topic[i])
-                #print(target_status)
-                #print(buf)
+                #if topic[i] == "Neuronavigation to Robot: Update displacement to target":
+                    #print(topic[i])
+                    #print(target_status)
+                    #print(buf[i]["data"])
+                    #print(buf)
 
                 match topic[i]:
                     case 'Set image fiducial':
@@ -187,43 +216,54 @@ def get_navigation_status():
                                         dashboard.image_RE_set = True
                                     case 'LE':
                                         dashboard.image_LE_set = True
-                    case 'Reset image fiducials':
+                    case 'Reset image fiducials': # local no código: invesalius/navigation/image.py
                         dashboard.image_NA_set = False
                         dashboard.image_RE_set = False
                         dashboard.image_LE_set = False
-                    case 'Project loaded successfully':
+                    case 'Project loaded successfully': # local no código: invesalius/control.py
                         dashboard.project_set = True
-                    case 'Close Project':
+                    case 'Close Project': # local no código: invesalius/control.py
                         dashboard.project_set = False
-                    case 'From Neuronavigation: Update tracker poses':
-                        distance_x = (target_status['poses'][1][0] - target_status['poses'][2][0]) /40# / (target_status['poses'][1][0]+0.0000001)
-                        distance_y = (target_status['poses'][1][1] - target_status['poses'][2][1]) /40# / (target_status['poses'][1][1]+0.0000001)
-                        distance_z = (target_status['poses'][1][2] - target_status['poses'][2][2]) /40# / (target_status['poses'][1][2]+0.0000001)
-                        distance = (distance_x + distance_y + distance_z)/6
+                    case 'From Neuronavigation: Update tracker poses': # local no código: invesalius3/invesalius/data/coordinates.py
+                        #distance_x = (target_status['poses'][1][0] - target_status['poses'][2][0])# / (target_status['poses'][1][0]+0.0000001)
+                        #distance_y = (target_status['poses'][1][1] - target_status['poses'][2][1])# / (target_status['poses'][1][1]+0.0000001)
+                        #distance_z = (target_status['poses'][1][2] - target_status['poses'][2][2])# / (target_status['poses'][1][2]+0.0000001)
+                        #distance = (distance_x + distance_y + distance_z) /3
                         #print("target >>>>>" + str(abs(distance)))
+                        #print("target_x >>>>>" + str(abs(distance_x)))
+                        #print("target_y >>>>>" + str(abs(distance_y)))
+                        #print("target_z >>>>>" + str(abs(distance_z)))
                         dashboard.robot_moving = True
-                    case 'Tracker changed':
+                    case 'Neuronavigation to Robot: Update displacement to target': # local no código: invesalius3/invesalius/data/viewer_volume.py
+                        distance_x = (target_status['displacement'][0])# - target_status['displacement'][2][0])# / (target_status['poses'][1][0]+0.0000001)
+                        distance_y = (target_status['displacement'][1])# - target_status['displacement'][2][1])# / (target_status['poses'][1][1]+0.0000001)
+                        distance_z = (target_status['displacement'][2])# - target_status['displacement'][2][2])# / (target_status['poses'][1][2]+0.0000001)
+                        distance_0 = (distance_x + distance_y + distance_z) /3
+                        dashboard.robot_moving = True
+                    case 'Tracker changed': #invesalius3/invesalius/gui/task_navigator.py
                         dashboard.camera_set = False
-                    case 'Tracker fiducials set':
+                    case 'Tracker fiducials set': #invesalius3/invesalius/gui/task_navigator.py
                         dashboard.tracker_LE_set = True
                         dashboard.tracker_RE_set = True
                         dashboard.tracker_NA_set = True
-                    case 'Reset tracker fiducials':
+                    case 'Reset tracker fiducials': #invesalius3/invesalius/gui/task_navigator.py
                         dashboard.tracker_NA_set = False
                         dashboard.tracker_RE_set = False
                         dashboard.tracker_LE_set = False
-                    case 'Open navigation menu':
+                    case 'Open navigation menu':  #invesalius3/invesalius/gui/task_navigator.py
+                        # test with "Update object registration" or "Neuronavigation to Robot: Connect to robot" or "Neuronavigation to Robot: Set robot transformation matrix"
                         dashboard.robot_set = True
                         dashboard.matrix_set = True
-                    case 'Set target mode':
+                    case 'Set target mode': #invesalius3/invesalius/gui/task_navigator.py
                         dashboard.target_set = True
-                    case 'Unset target':
+                    case 'Unset target': # invesalius/navigation/robot.py
                         dashboard.target_set = False
-                    case 'Set objective':
+                    case 'Neuronavigation to Robot: Set objective': # invesalius/navigation/robot.py
                         dashboard.robot_moving = True
-                    case 'Coil at target':
+                    case 'Coil at target': # local no código: invesalius/data/viewer_volume.py
                         if target_status['state'] == True:
                             dashboard.at_target = True
+                            dashboard.robot_moving = False
                         else:
                             dashboard.at_target = False
                     case 'Trial triggered':
@@ -231,6 +271,8 @@ def get_navigation_status():
                         print (target_status)
                         print (str(dashboard.trials_started))
                         dashboard.trials_started = True
+                    case 'Stop navigation': # invesalius/control.py
+                        dashboard.robot_moving = False
 
 # Função que busca o status da navegação e atualiza a thread 
 def message_nav():
@@ -245,9 +287,8 @@ def message_nav():
 
 # start
 
-
 dashboard = Dashboard()  # Inicializa o dashboard em variável local
-rc1 = RemoteControl("http://127.0.0.1:5000")
+rc1 = RemoteControl("http://127.0.0.1:5000") # Define a conexão com uma porta local ou servidor
 #rc1 = RemoteControl("http://192.168.200.203:5000")
 #rc2 = RemoteControl("http://192.168.200.201:5000")
 #rc1 = RemoteControl("http://169.254.100.20:5000")
@@ -261,10 +302,12 @@ threading.Thread(
     target=message_nav,
     daemon=None).start() # Inicia o threading
 
+# Título da página
 with ui.row().classes('items-center q-pa-md'):
     ui.image('static/biomag_logo.jpg').classes('w-12 h-12')
     ui.label('Biomag TMS Dashboard').classes('text-h4')
 
+# Detalhes do experimento
 with ui.expansion('Experiment details', icon='expand_more'):
     ui.label('Edit the experiment details')
 
@@ -276,6 +319,7 @@ with ui.expansion('Experiment details', icon='expand_more'):
 
     ui.button('Save', on_click=gravar_dados)
 
+# Expansor com as principais funções
 with ui.expansion('Dashboard Main Functions', icon='expand_more'):
     
     with ui.tabs().classes('w-full') as tabs:
@@ -365,12 +409,61 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
             ui.label('Ongoing navigation')
             with ui.splitter() as splitter:
                 with splitter.before:
-                    with ui.pyplot(figsize=(3, 2)):
-                        x = np.linspace(0.0, 5.0)
+                    with ui.matplotlib(figsize=(3, 2)).figure as fig:
+                        x = np.linspace(0, 10, 100)
                         y = np.cos(2 * np.pi * x) * np.exp(-x)
-                        plt.plot(x, y, '-')
+                        ax = fig.gca()
+                        ax.plot(x, y, '-')
+                    
+                    class CoordinateSystem(ui.scene.group):
+
+                        def __init__(self, name: str, *, length: float = 1.0) -> None:
+                            super().__init__()
+
+                            with self:
+                                for label, color, rx, ry, rz in [
+                                    ('x', '#ff0000', 0, 0, -math.pi / 2),
+                                    ('y', '#00ff00', 0, 0, 0),
+                                    ('z', '#0000ff', math.pi / 2, 0, 0),
+                                ]:
+                                    with ui.scene.group().rotate(rx, ry, rz):
+                                        ui.scene.cylinder(0.02 * length, 0.02 * length, 0.8 * length) \
+                                            .move(y=0.4 * length).material(color)
+                                        ui.scene.cylinder(0, 0.1 * length, 0.2 * length) \
+                                            .move(y=0.9 * length).material(color)
+                                        ui.scene.text(label, style=f'color: {color}') \
+                                            .move(y=1.1 * length)
+                                ui.scene.text(name, style='color: #808080')
+
+                    with ui.scene().classes('w-full h-64') as scene:
+                        origin = CoordinateSystem('Target')
+                        custom_frame = CoordinateSystem('TMS coil')
+
+                    # Timer que atualiza o frame a cada 0.1s
+                    ui.timer(0.05, lambda: custom_frame.move(distance_x, distance_y, distance_z))
 
                 with splitter.after:
+                    line_plot = ui.line_plot(n=3, limit=20, figsize=(4, 3), update_every=5) \
+                        .with_legend(['X', 'Y', 'Z'], loc='upper center', ncol=3)
+
+                    def update_line_plot() -> None:
+                        now = datetime.now()
+                        x = now.timestamp()
+                        if dashboard.robot_moving != True:
+                            y1 = math.sin(x)*10
+                            y2 = math.cos(x)*10
+                            y3 = math.tan(x)*10
+                        else:
+                            y1 = distance_x /5
+                            y2 = distance_y /5
+                            y3 = distance_z /5
+
+                        line_plot.push([now], [[y1], [y2], [y3]], y_limits=(-10, 10))
+
+                    line_updates = ui.timer(0.05, update_line_plot, active=False)
+                    line_checkbox = ui.checkbox('active').bind_value(line_updates, 'active')
+
+
                     with ui.scene().classes('w-full h-64') as scene:
                         scene.axes_helper()
                         scene.sphere().material('#4488ff').move(2, 2)
@@ -398,29 +491,7 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
                         scene.text('2D', 'background: rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 5px').move(z=2)
                         scene.text3d('3D', 'background: rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 5px').move(y=-2).scale(.05)
 
-                    class CoordinateSystem(ui.scene.group):
 
-                        def __init__(self, name: str, *, length: float = 1.0) -> None:
-                            super().__init__()
-
-                            with self:
-                                for label, color, rx, ry, rz in [
-                                    ('x', '#ff0000', 0, 0, -math.pi / 2),
-                                    ('y', '#00ff00', 0, 0, 0),
-                                    ('z', '#0000ff', math.pi / 2, 0, 0),
-                                ]:
-                                    with ui.scene.group().rotate(rx, ry, rz):
-                                        ui.scene.cylinder(0.02 * length, 0.02 * length, 0.8 * length) \
-                                            .move(y=0.4 * length).material(color)
-                                        ui.scene.cylinder(0, 0.1 * length, 0.2 * length) \
-                                            .move(y=0.9 * length).material(color)
-                                        ui.scene.text(label, style=f'color: {color}') \
-                                            .move(y=1.1 * length)
-                                ui.scene.text(name, style='color: #808080')
-
-                    with ui.scene().classes('w-full h-64'):
-                        CoordinateSystem('origin')
-                        CoordinateSystem('custom frame').move(-2, -2, 1).rotate(0.1, 0.2, 0.3)
             
         with ui.tab_panel(five):
             ui.label('Stimulation setup')
