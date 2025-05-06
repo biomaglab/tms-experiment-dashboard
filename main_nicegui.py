@@ -16,10 +16,10 @@ import threading
 from threading import Lock
 import queue
 
-# for local testing:
+# for local testing in Windows:
 # 1. run relay_server in VSCode terminal using:  
 # "python.exe relay_server.py 127.0.0.1 5000"
-# 2. in a separate environment, run InVesalius3 using:  
+# 2. in a separate environment, activate the invesalius virtual env (conda activate invesalius) and run InVesalius3 using:  
 # "C:/Users/bioma/anaconda3/envs/invesalius/python.exe c:/Users/bioma/Documents/GitHub/invesalius3/app.py --remote-host http://localhost:5000
 # 3. run main_nicegui in VSCode terminal using: 
 # "C:/Users/bioma/anaconda3/envs/tms_dashboard/python.exe c:/Users/bioma/Documents/GitHub/tms-experiment-dashboard/main_nicegui.py"
@@ -42,7 +42,7 @@ distance_0 = 0
 distance_x = 0
 distance_y = 0
 distance_z = 0
-robot_messages = {'Set target mode', 'Open navigation menu', 'Close Project', 'Project loaded successfully', 'Set image fiducial', 'Reset image fiducials', 'Set robot transformation matrix', 'Set target', 'Tracker fiducials set', 'Set objective', 'Unset target', 'Remove sensors ID', 'Reset tracker fiducials', 'Robot connection status','Reset image fiducials', 'Disconnect tracker', 'Tracker changed', 'From Neuronavigation: Update tracker poses','Coil at target', 'Neuronavigation to Robot: Update displacement to target', 'Trials started', 'Trial triggered', 'Stop navigation'}
+robot_messages = {'Neuronavigation to Robot: Set target', 'Start navigation', 'Open navigation menu', 'Close Project', 'Project loaded successfully', 'Set image fiducial', 'Reset image fiducials', 'Set robot transformation matrix', 'Set target', 'Tracker fiducials set', 'Set objective', 'Unset target', 'Remove sensors ID', 'Reset tracker fiducials', 'Robot connection status','Reset image fiducials', 'Disconnect tracker', 'Tracker changed', 'From Neuronavigation: Update tracker poses','Coil at target', 'Neuronavigation to Robot: Update displacement to target', 'Trials started', 'Trial triggered', 'Stop navigation'}
 textos = ['Project', 'Robot', 'Camera', 'TMS', 'Left Fiducial', 'Nasion', 'Right Fiducial', 'Left Tragus', 'Nose', 'Right Tragus', 'Target', 'Coil', 'Moving', 'Trials', 'Navigation stopped']
 labels: dict[str, Label] = {}
 
@@ -70,6 +70,11 @@ class Dashboard():
         self.robot_moving = False
         self.at_target = False
         self.trials_started = False
+        self.displacement = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
+        self.probe_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
+        self.head_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
+        self.coil_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
+        self.target_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
 
 # Função para gravar no CSV
 def gravar_dados():
@@ -168,7 +173,6 @@ def get_navigation_status():
     global target_status
     #global fiducial_counter
     global distance_0
-    global distance_0
     global distance_x
     global distance_y
     global distance_z
@@ -224,10 +228,11 @@ def get_navigation_status():
                         dashboard.project_set = True
                     case 'Close Project': # local no código: invesalius/control.py
                         dashboard.project_set = False
-                    case 'From Neuronavigation: Update tracker poses': # local no código: invesalius3/invesalius/data/coordinates.py
-                        #distance_x = (target_status['poses'][1][0] - target_status['poses'][2][0])# / (target_status['poses'][1][0]+0.0000001)
-                        #distance_y = (target_status['poses'][1][1] - target_status['poses'][2][1])# / (target_status['poses'][1][1]+0.0000001)
-                        #distance_z = (target_status['poses'][1][2] - target_status['poses'][2][2])# / (target_status['poses'][1][2]+0.0000001)
+                    case 'From Neuronavigation: Update tracker poses': # local no código: invesalius3/invesalius/data/coordinates.py (lines 206 ...)
+                        dashboard.probe_location = (target_status['poses'][0][0], target_status['poses'][0][1], target_status['poses'][0][2], np.degrees(target_status['poses'][0][3]), np.degrees(target_status['poses'][0][4]), np.degrees(target_status['poses'][0][5])) # coil
+                        dashboard.head_location = (target_status['poses'][1][0], target_status['poses'][1][1], target_status['poses'][1][2],np.degrees(target_status['poses'][1][3]), np.degrees(target_status['poses'][1][4]), np.degrees(target_status['poses'][1][5])) # probe
+                        dashboard.coil_location = (target_status['poses'][2][0], target_status['poses'][2][1], target_status['poses'][2][2], np.degrees(target_status['poses'][2][3]), np.degrees(target_status['poses'][2][4]), np.degrees(target_status['poses'][2][5])) # head
+                        dashboard.target_location = (target_status['poses'][3][0], target_status['poses'][3][1], target_status['poses'][3][2], np.degrees(target_status['poses'][3][3]), np.degrees(target_status['poses'][3][4]), np.degrees(target_status['poses'][3][5])) # coil
                         #distance = (distance_x + distance_y + distance_z) /3
                         #print("target >>>>>" + str(abs(distance)))
                         #print("target_x >>>>>" + str(abs(distance_x)))
@@ -235,9 +240,10 @@ def get_navigation_status():
                         #print("target_z >>>>>" + str(abs(distance_z)))
                         dashboard.robot_moving = True
                     case 'Neuronavigation to Robot: Update displacement to target': # local no código: invesalius3/invesalius/data/viewer_volume.py
-                        distance_x = (target_status['displacement'][0])# - target_status['displacement'][2][0])# / (target_status['poses'][1][0]+0.0000001)
-                        distance_y = (target_status['displacement'][1])# - target_status['displacement'][2][1])# / (target_status['poses'][1][1]+0.0000001)
-                        distance_z = (target_status['displacement'][2])# - target_status['displacement'][2][2])# / (target_status['poses'][1][2]+0.0000001)
+                        dashboard.displacement = list(map(lambda x: target_status['displacement'][x], range(6)))  # Updates displacement values
+                        distance_x = dashboard.displacement[0]
+                        distance_y = dashboard.displacement[1]
+                        distance_z = dashboard.displacement[2]
                         distance_0 = (distance_x + distance_y + distance_z) /3
                         dashboard.robot_moving = True
                     case 'Tracker changed': #invesalius3/invesalius/gui/task_navigator.py
@@ -254,11 +260,13 @@ def get_navigation_status():
                         # test with "Update object registration" or "Neuronavigation to Robot: Connect to robot" or "Neuronavigation to Robot: Set robot transformation matrix"
                         dashboard.robot_set = True
                         dashboard.matrix_set = True
-                    case 'Set target mode': #invesalius3/invesalius/gui/task_navigator.py
+                    case 'Neuronavigation to Robot: Set target': #invesalius3/invesalius/gui/task_navigator.py or invesalius/navigation/robot.py (ln 201)
+                        dashboard.target_location = (target_status['target'][0][3], target_status['target'][1][3], target_status['target'][2][3])
+                        print(dashboard.target_location)
                         dashboard.target_set = True
                     case 'Unset target': # invesalius/navigation/robot.py
                         dashboard.target_set = False
-                    case 'Neuronavigation to Robot: Set objective': # invesalius/navigation/robot.py
+                    case 'Start navigation': # invesalius/navigation/robot.py
                         dashboard.robot_moving = True
                     case 'Coil at target': # local no código: invesalius/data/viewer_volume.py
                         if target_status['state'] == True:
@@ -409,15 +417,10 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
             ui.label('Ongoing navigation')
             with ui.splitter() as splitter:
                 with splitter.before:
-                    with ui.matplotlib(figsize=(3, 2)).figure as fig:
-                        x = np.linspace(0, 10, 100)
-                        y = np.cos(2 * np.pi * x) * np.exp(-x)
-                        ax = fig.gca()
-                        ax.plot(x, y, '-')
-                    
+                    # inclui uma cena 3D para representação do alvo e da bobina
                     class CoordinateSystem(ui.scene.group):
 
-                        def __init__(self, name: str, *, length: float = 1.0) -> None:
+                        def __init__(self, name: str, *, length: float = 1.0, model_path: str = None) -> None:
                             super().__init__()
 
                             with self:
@@ -434,13 +437,28 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
                                         ui.scene.text(label, style=f'color: {color}') \
                                             .move(y=1.1 * length)
                                 ui.scene.text(name, style='color: #808080')
-
+                            
                     with ui.scene().classes('w-full h-64') as scene:
+                        scene.axes_helper()
                         origin = CoordinateSystem('Target')
                         custom_frame = CoordinateSystem('TMS coil')
 
-                    # Timer que atualiza o frame a cada 0.1s
-                    ui.timer(0.05, lambda: custom_frame.move(distance_x, distance_y, distance_z))
+                    # Timer que atualiza o frame 3D a cada 0.05s
+                    def update_frame():
+                        # Deslocamento linear (x, y, z)
+                        distance_x = dashboard.displacement[0]
+                        distance_y = dashboard.displacement[1]
+                        distance_z = dashboard.displacement[2]
+
+                        # Deslocamento angular (rx, ry, rz) em radianos
+                        rotation_x = dashboard.displacement[3]
+                        rotation_y = dashboard.displacement[4]
+                        rotation_z = dashboard.displacement[5]
+
+                        custom_frame.move(distance_x, distance_y, distance_z)
+                        custom_frame.rotate(rotation_x, rotation_y, rotation_z)
+
+                    ui.timer(0.05, update_frame) # atualiza as coordenadas dos gizmos no gráfico 3D
 
                 with splitter.after:
                     line_plot = ui.line_plot(n=3, limit=20, figsize=(4, 3), update_every=5) \
@@ -454,9 +472,9 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
                             y2 = math.cos(x)*10
                             y3 = math.tan(x)*10
                         else:
-                            y1 = distance_x /5
-                            y2 = distance_y /5
-                            y3 = distance_z /5
+                            y1 = dashboard.displacement[0] /5
+                            y2 = dashboard.displacement[1] /5
+                            y3 = dashboard.displacement[2] /5
 
                         line_plot.push([now], [[y1], [y2], [y3]], y_limits=(-10, 10))
 
@@ -465,7 +483,7 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
 
 
                     with ui.scene().classes('w-full h-64') as scene:
-                        scene.axes_helper()
+                        '''scene.axes_helper()
                         scene.sphere().material('#4488ff').move(2, 2)
                         scene.cylinder(1, 0.5, 2, 20).material('#ff8800', opacity=0.5).move(-2, 1)
                         scene.extrusion([[0, 0], [0, 1], [1, 0.5]], 0.1).material('#ff8888').move(2, -1)
@@ -476,20 +494,53 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
                             scene.box(wireframe=True).material('#888888').move(x=2, y=2)
 
                         scene.line([-4, 0, 0], [-4, 2, 0]).material('#ff0000')
-                        scene.curve([-4, 0, 0], [-4, -1, 0], [-3, -1, 0], [-3, 0, 0]).material('#008800')
+                        scene.curve([-4, 0, 0], [-4, -1, 0], [-3, -1, 0], [-3, 0, 0]).material('#008800')'''
 
                         logo = 'https://avatars.githubusercontent.com/u/2843826'
                         scene.texture(logo, [[[0.5, 2, 0], [2.5, 2, 0]],
                                             [[0.5, 0, 0], [2.5, 0, 0]]]).move(1, -3)
 
-                        teapot = 'https://upload.wikimedia.org/wikipedia/commons/9/93/Utah_teapot_(solid).stl'
-                        scene.stl(teapot).scale(0.2).move(-3, 4)
+                        probe_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/stylus.stl'
+                        probe = scene.stl(probe_url).scale(0.02).move(-2, -3, 0.5)
 
-                        avocado = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Avocado/glTF-Binary/Avocado.glb'
-                        scene.gltf(avocado).scale(40).move(-2, -3, 0.5)
+                        head_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/head.stl'
+                        head = scene.stl(head_url).scale(0.02).move(-3, 4, 1).rotate(1.57, 0, 0)
 
-                        scene.text('2D', 'background: rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 5px').move(z=2)
-                        scene.text3d('3D', 'background: rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 5px').move(y=-2).scale(.05)
+                        coil_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/magstim_fig8_coil.stl'
+                        coil = scene.stl(coil_url).scale(0.02).move(-2, -3, 0.5)
+
+                        target_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/aim.stl'
+                        target = scene.stl(target_url).scale(0.2).move(-2, -3, 0.5)
+
+                        #scene.text('2D', 'background: rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 5px').move(z=2)
+                        scene.text3d('TMS setup', 'background: rgba(0, 0, 0, 0.2); border-radius: 5px; padding: 5px').move(y=-2).scale(.05)
+
+                        #ui.timer(0.05, lambda: head.move(distance_x, distance_y, distance_z))
+
+                                            # Timer que atualiza o frame 3D a cada 0.05s
+                    def update_positions():
+                        # Posição dos objetos (x, y, z)
+                        probe_position = dashboard.probe_location[:3]
+                        head_position = dashboard.head_location[:3]
+                        #print(head_position)
+                        coil_position = dashboard.coil_location[:3]
+                        target_position = dashboard.target_location[:3]
+
+                        # Rotação dos objetos (rx, ry, rz) em radianos
+                        probe_rotation = dashboard.probe_location[3:]
+                        head_rotation = dashboard.head_location[3:]
+                        #print(head_rotation)
+                        coil_rotation = dashboard.coil_location[3:]
+
+                        probe.move(int(probe_position[0]), int(probe_position[1]), int(probe_position[2]))
+                        probe.rotate(int(probe_rotation[0]), int(probe_rotation[1]), int(probe_rotation[2]))
+                        head.move(int(head_position[0]), int(head_position[1]), int(head_position[2]))
+                        head.rotate(int(head_rotation[0]), int(head_position[1]), int(head_position[2]))
+                        coil.move(int(dashboard.displacement[0]), int(dashboard.displacement[1]),int(dashboard.displacement[2]))
+                        coil.rotate(int(dashboard.displacement[3]), int(dashboard.displacement[4]), int(dashboard.displacement[5]))
+                        target.move(int(target_position[0]), int(target_position[1]),int(target_position[2]))
+
+                    ui.timer(0.1, update_positions) # atualiza as posições e rotações dos objetos no gráfico 3D
 
 
             

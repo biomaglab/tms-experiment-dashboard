@@ -1,8 +1,8 @@
 # Biomag TMS Experiment Dashboard
 
-<img src="logo.jfif" alt="Logo Biomag">
+<img src="https://raw.githubusercontent.com/biomaglab/tms-experiment-dashboard/master/static/biomag_logo.jpg" alt="Logo Biomag">
 
-> Interface gráfica em formato web dpara visualização e controle de eventos durante experimentos de TMS acoplaos a EMG.
+> Interface gráfica em formato web para visualização e controle de eventos durante experimentos de TMS acoplados a EMG usando o InVesalius.
 
 ### Ajustes e melhorias
 
@@ -10,16 +10,17 @@ O projeto está em desenvolvimento e as próximas atualizações serão voltadas
 
 - [x] Adicionados recursos de metadados para adequação com os modelos de dados do CEPID Neuromat
 - [x] Integração dos scripts para a aquisição de eventos durante o experimento (socket messages)
+- [x] Implementação de um sistema de cadastramento de experimentos usando o esquema json
 - [ ] Incremento da capacidade dos scripts de mostrar os movimentos de um ou mais braços robóticos
 - [ ] Envio de mensagens por socket para a rede local do InVesalius Neuronavigator
 - [ ] Implementação da visualização do andamento completo do experimento
-- [ ] Implementação de um sistema de cadastramento de experimentos usando o esquema json
+
 
 ## 💻 Pré-requisitos
 
-Antes de começar, verifique se você instalou as seguintes dependâncias:
+Antes de começar, verifique se você instalou as seguintes dependências:
 
-- Estão instalados as bibliotecas python: serial e streamlit
+- Estão instalados as bibliotecas python: serial e streamlit (ver setup.py)
 - Você tem uma máquina Linux/Mac ou Windows com WSL ou Anaconda/Miniconda.
 - Você leu este README.
 
@@ -48,11 +49,20 @@ Para usar Dashboard, siga estas etapas:
 - Digite "code ." para abrir o VS Code, caso queira verificar os códigos a serem rodados
 - Em seguida, execute o script main_loop.py. Observação: o main_loop deve ser executado usando o **Python Console**:
 
-`python main_loop.py`
+`python.exe relay_server.py 127.0.0.1 5000`
  
-Depois disso, execute o script InVesalius app.py (https://github.com/invesalius/invesalius3) com o argumento --remote-host, especificando a mesma porta do servidor de retransmissão
+Depois disso, execute o script InVesalius app.py (https://github.com/invesalius/invesalius3) com o argumento --remote-host, especificando a mesma porta do servidor de retransmissão:
+
+`python.exe c:/Users/user/GitHub/invesalius3/app.py --remote-host http://localhost:5000`
+
+E depois:
 
 `streamlit run web_UI_streamlit_trials.py`
+
+ou
+
+`python.exe ./main_nicegui.py`
+
 
 ```
 
