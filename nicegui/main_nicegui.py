@@ -16,7 +16,7 @@ import threading
 from threading import Lock
 import queue
 
-# for local testing in Windows:
+# for local testing in Windows (using VS Code, conda venv with Pythin 3.12.2 in tms_dashboard env):
 # 1. run relay_server in VSCode terminal using:  
 # "python.exe relay_server.py 127.0.0.1 5000"
 # 2. in a separate environment, activate the invesalius virtual env (conda activate invesalius) and run InVesalius3 using:  
@@ -577,7 +577,7 @@ with ui.expansion('Dashboard Main Functions', icon='expand_more'):
             ui.button('Robot → verde', on_click=lambda: mudar_cor('Robot', 'green'))
             ui.button('Camera → verde', on_click=lambda: mudar_cor('Nose', 'green'))
             ui.button('Texto C → azul', on_click=lambda: mudar_cor('Left Tragus', 'blue'))
-
+ui.fullscreen()
 ui.run(port=8084)
 
 update_dashboard()
