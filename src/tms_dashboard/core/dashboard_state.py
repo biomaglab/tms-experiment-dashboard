@@ -3,6 +3,8 @@
 """Dashboard state management - framework agnostic"""
 
 from dataclasses import dataclass
+from collections import deque
+import time
 import numpy as np
 
 
@@ -18,6 +20,9 @@ class DashboardState:
     """
     
     def __init__(self):
+        # Navigation button status
+        self.navigation_button_pressed = False
+
         # Connection and setup status
         self.project_set = False
         self.camera_set = False
@@ -48,10 +53,19 @@ class DashboardState:
         
         # Navigation position/orientation data (x, y, z, rx, ry, rz)
         self.displacement = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
+        self.module_displacement = 0.0
         self.probe_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
         self.head_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
         self.coil_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
         self.target_location = np.array([0, 0, 0, 0, 0, 0], dtype=np.float64)
+        
+        # Displacement history for time series plotting (x, y, z only)
+        self.max_history_length = 100  # Maximum number of samples to keep
+        self.displacement_history_x = deque(maxlen=self.max_history_length)
+        self.displacement_history_y = deque(maxlen=self.max_history_length)
+        self.displacement_history_z = deque(maxlen=self.max_history_length)
+        self.displacement_time_history = deque(maxlen=self.max_history_length)
+        self._start_time = time.time()  # Reference time for plotting
         
         # Experiment metadata with default values
         self.experiment_name = 'Paired pulse, dual site, bilateral, leftM1-rightPMv'
@@ -69,3 +83,18 @@ class DashboardState:
         self.number_conditions = '4'
         self.trials_per_condition = '30'
         self.intertrial_interval = '12'  # ms
+    
+    def add_displacement_sample(self):
+        """Add current displacement values to history for time series plotting.
+        
+        This method is called whenever new displacement data is received.
+        It automatically maintains a rolling window of the last max_history_length samples.
+        """
+        # Calculate elapsed time in seconds
+        elapsed_time = time.time() - self._start_time
+        
+        # Add current displacement values (x, y, z only)
+        self.displacement_history_x.append(float(self.displacement[0]))
+        self.displacement_history_y.append(float(self.displacement[1]))
+        self.displacement_history_z.append(float(self.displacement[2]))
+        self.displacement_time_history.append(elapsed_time)

@@ -80,7 +80,7 @@ def section_title_style() -> str:
     )
 
 
-def change_color(dashboard, target_label: str, new_status: str):
+def change_color(dashboard, target_label: str, new_status: str, colors: tuple = None):
     """Change the color of a label and its associated icon.
     
     Apenas duas cores são usadas:
@@ -92,9 +92,11 @@ def change_color(dashboard, target_label: str, new_status: str):
         target_label: Name of the label to update (will be converted to lowercase)
         new_status: Status - 'success' or 'neutral'
     """
-    # Apenas duas cores possíveis
-    color = '#10b981' if new_status == 'success' else '#9ca3af'  # Verde ou Cinza
-    
+    if colors is None:
+        color = '#10b981' if new_status == 'success' else '#9ca3af'  # Verde ou Cinza
+    else:
+        color = colors[0] if new_status == 'success' else colors[1]
+        
     # Update label if exists in dashboard
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
     if hasattr(dashboard, label_key):
@@ -117,37 +119,13 @@ def change_icon(dashboard, target_label: str, new_status: str):
         icon.name = 'radio_button_unchecked' if new_status == 'neutral' else 'radio_button_checked'
         icon.update()
 
+def change_label(dashboard, target_label: str, new_text: str):
+    """Change the label of a label based on status."""
+    label_key = f'label_{target_label.lower().replace(" ", "_")}'
+    if hasattr(dashboard, label_key):
+        label = getattr(dashboard, label_key)
+        label.text = new_text
+        label.update()
 
-def update_dashboard_colors(dashboard):
-    """Update all dashboard label colors based on state.
-    
-    Args:
-        dashboard: DashboardState instance
-    """
-    # Determine status based on state
-    def get_status(condition: bool) -> str:
-        return 'success' if condition else 'neutral'
-    
-    change_color(dashboard, "project", get_status(dashboard.project_set))
-    change_color(dashboard, "camera", get_status(dashboard.camera_set))
-    change_color(dashboard, "robot", get_status(dashboard.robot_set))
-    change_color(dashboard, "tms", get_status(dashboard.tms_set))
-    change_color(dashboard, "probe", get_status(dashboard.probe_visible))
-    change_color(dashboard, "head", get_status(dashboard.head_visible))
-    change_color(dashboard, "coil", get_status(dashboard.coil_visible))
-
-    change_color(dashboard, "nasion", get_status(dashboard.image_NA_set))
-    change_icon(dashboard, "nasion", get_status(dashboard.image_NA_set))
-    change_color(dashboard, "r_fid", get_status(dashboard.image_RE_set))
-    change_icon(dashboard, "r_fid", get_status(dashboard.image_RE_set))
-    change_color(dashboard, "l_fid", get_status(dashboard.image_LE_set))
-    change_icon(dashboard, "l_fid", get_status(dashboard.image_LE_set))
-    change_color(dashboard, "nose", get_status(dashboard.tracker_NA_set))
-    change_icon(dashboard, "nose", get_status(dashboard.tracker_NA_set))
-    change_color(dashboard, "l_tragus", get_status(dashboard.tracker_LE_set))
-    change_icon(dashboard, "l_tragus", get_status(dashboard.tracker_LE_set))
-
-    change_color(dashboard, "target", get_status(dashboard.target_set))
-    change_color(dashboard, "moving", get_status(dashboard.robot_moving))
-    change_color(dashboard, "coil", get_status(dashboard.at_target))
-    # change_color(dashboard, "trials", get_status(dashboard.trials_started))
+def get_status(condition: bool) -> str:
+    return 'success' if condition else 'neutral'

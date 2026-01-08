@@ -38,16 +38,9 @@ class MessageHandler:
         if len(buf) == 0:
             return None
         
-        # Check if any message topic is in robot_messages
-        if not any(item in [d['topic'] for d in buf] for item in robot_messages):
-            return None
-        
-        topics = [d['topic'] for d in buf]
-        
-        for i in range(len(buf)):
-            if topics[i] in robot_messages:
-                self.target_status = buf[i]["data"]
-                self._handle_message(topics[i], self.target_status)
+        for message in buf:
+            topic, data = message['topic'], message['data']
+            self._handle_message(topic, data)
         
         return self.target_status
     
@@ -109,7 +102,8 @@ class MessageHandler:
             case 'Open navigation menu':
                 self.dashboard.matrix_set = True
             
-            case 'Set target':
+            case "Set target":
+                print("Set target")
                 self.dashboard.target_set = True
             
             case 'Unset target':
@@ -118,17 +112,15 @@ class MessageHandler:
             case "Robot to Neuronavigation: Set objective":
                 self.dashboard.robot_moving = False if data["objective"] == 0 else True
             
-            case 'Start navigation':
-                pass
-            
             case 'Coil at target':
                 if data['state'] == True:
                     self.dashboard.at_target = True
                 else:
                     self.dashboard.at_target = False
             
-            case 'Stop navigation':
-                self.dashboard.robot_moving = False
+            case "Press navigation button":
+                self.dashboard.navigation_button_pressed = data["cond"]
+                print(data["cond"])
     
     def _handle_image_fiducial(self, data):
         """Handle image fiducial setting/unsetting."""
@@ -177,8 +169,9 @@ class MessageHandler:
     def _handle_displacement(self, data):
         """Handle displacement to target update."""
         self.dashboard.displacement = list(map(lambda x: data['displacement'][x], range(6)))
-        self.distance_x = self.dashboard.displacement[0]
-        self.distance_y = self.dashboard.displacement[1]
-        self.distance_z = self.dashboard.displacement[2]
-        self.distance_0 = (self.distance_x + self.distance_y + self.distance_z) / 3
+        self.dashboard.module_distance = np.linalg.norm(self.dashboard.displacement[:3])
+        self.dashboard.module_distance = str(round(self.dashboard.module_distance, 2)) + " mm"
+
+        # Update displacement history for plotting
+        self.dashboard.add_displacement_sample()
 

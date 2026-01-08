@@ -19,8 +19,8 @@ def main():
     
     # Try NiceGUI first
     try:
-        from src.tms_dashboard.nicegui_app.main import main as nicegui_main
-        nicegui_main()
+        from src.tms_dashboard.nicegui_app.run import main as nicegui_run
+        nicegui_run()
         return
         
     except ImportError as e:
@@ -29,8 +29,8 @@ def main():
     
     # Fallback to Streamlit
     try:
-        from src.tms_dashboard.streamlit_app.main import main as streamlit_main
-        streamlit_main()
+        from src.tms_dashboard.streamlit_app.run import main as streamlit_run
+        streamlit_run()
         return
         
     except ImportError:

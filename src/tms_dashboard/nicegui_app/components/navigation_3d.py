@@ -54,6 +54,9 @@ def create_navigation_3d(dashboard: DashboardState):
     # Main scene with coordinate systems and coil tracking
     with ui.scene().classes('w-full').style('height: 400px;') as scene:
         scene.axes_helper()
+        scene.controls.enableRotate = False
+        scene.controls.enableZoom = False
+        scene.controls.enablePan = False
         
         # Target coordinate system (origin)
         origin = create_coordinate_system('Target')
@@ -88,6 +91,9 @@ def create_3d_scene_with_models(dashboard: DashboardState):
     """
     # Full height scene - fills parent container
     with ui.scene().classes('w-full h-full') as scene:
+        # scene.controls.enableRotate = False
+        # scene.controls.enableZoom = False
+        # scene.controls.enablePan = False
         # Load STL models from InVesalius3 GitHub repository
         probe_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/stylus.stl'
         probe = scene.stl(probe_url).scale(0.02).move(-2, -3, 0.5)

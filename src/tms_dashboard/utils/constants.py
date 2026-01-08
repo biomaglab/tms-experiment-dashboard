@@ -26,7 +26,9 @@ robot_messages = {
     'Neuronavigation to Robot: Update displacement to target',
     'Trials started',
     'Trial triggered',
-    'Stop navigation'
+    'Stop navigation',
+    'Set objective',
+    'Set trial objective',
 }
 
 # UI label texts
