@@ -1,0 +1,29 @@
+[project]
+name = "tms-experiment-dashboard"
+version = "0.2.0"
+description = "Dashboard para experimentos TMS com suporte dual framework (NiceGUI/Streamlit)"
+readme = "README.md"
+requires-python = ">=3.11"
+
+# Core dependencies (always installed)
+dependencies = [
+    "python-socketio",  # Para relay server connection
+    "uvicorn",
+    "nest-asyncio",
+    "requests",
+    "websocket-client",
+    "websockets",
+    "numpy",
+    "opencv-python",
+    "pynput",
+    "matplotlib",
+    "scipy",
+    "python-dotenv",
+    "nicegui>=3.4.1",
+]
+
+# Optional framework dependencies
+[project.optional-dependencies]
+nicegui = ["nicegui"]  # Latest version
+streamlit = ["streamlit"]
+all = ["nicegui", "streamlit"]
