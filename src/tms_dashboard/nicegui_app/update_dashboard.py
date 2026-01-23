@@ -22,9 +22,10 @@ class UpdateDashboard:
         change_color(dashboard, "camera", get_status(dashboard.camera_set))
         change_color(dashboard, "robot", get_status(dashboard.robot_set))
         change_color(dashboard, "tms", get_status(dashboard.tms_set))
-        change_color(dashboard, "probe", get_status(dashboard.probe_visible))
-        change_color(dashboard, "head", get_status(dashboard.head_visible))
-        change_color(dashboard, "coil", get_status(dashboard.coil_visible))
+
+        change_color(dashboard, "marker_probe", get_status(dashboard.probe_visible))
+        change_color(dashboard, "marker_head", get_status(dashboard.head_visible))
+        change_color(dashboard, "marker_coil", get_status(dashboard.coil_visible))
 
         change_color(dashboard, "nasion", get_status(dashboard.image_NA_set))
         change_icon(dashboard, "nasion", get_status(dashboard.image_NA_set))
@@ -42,13 +43,12 @@ class UpdateDashboard:
         change_color(dashboard, "target", get_status(dashboard.target_set))
         change_color(dashboard, "moving", get_status(dashboard.robot_moving))
         change_color(dashboard, "coil", get_status(dashboard.at_target))
-        change_color(dashboard, "coil", get_status(dashboard.at_target))
         # change_color(dashboard, "trials", get_status(dashboard.trials_started))
 
     def update_indicators(self):
         """Update all dashboard indicators."""
         dashboard = self.dashboard
-        change_label(dashboard, "distance", dashboard.module_distance)
+        change_label(dashboard, "distance", str(round(dashboard.module_displacement, 2)) + " mm")
         change_label(dashboard, "force", dashboard.force)
 
     def update_displacement_plot(self):

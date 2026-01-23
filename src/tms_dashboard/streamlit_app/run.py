@@ -8,7 +8,7 @@ import time
 
 from ..config import DEFAULT_HOST, DEFAULT_PORT
 from ..core.dashboard_state import DashboardState
-from ..core.socket_client import SocketClient
+from ..core.components.socket_client import SocketClient
 from ..core.message_handler import MessageHandler
 
 

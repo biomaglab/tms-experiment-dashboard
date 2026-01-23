@@ -55,11 +55,12 @@ def create_status_widgets(dashboard: DashboardState):
             for label_text, icon in [
                 ('Head', 'face'),
                 ('Coil', 'sensors'),
-                ('Probe', 'stylus'),
+                ('Probe', 'sensors'),
             ]:
                 with ui.row().style('gap: 4px;'):
                     ui.icon(icon).style('font-size: 22px; color: #9ca3af;')
                     label = ui.label(label_text).style('font-size: 1.0rem; color: #9ca3af;')
+                    dashboard.__dict__[f'icon_marker_{label_text.lower()}'] = icon
                     dashboard.__dict__[f'label_marker_{label_text.lower()}'] = label
     
     ui.separator().style('margin: 4px 0;')

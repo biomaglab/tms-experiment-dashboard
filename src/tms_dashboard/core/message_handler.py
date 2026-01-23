@@ -3,9 +3,10 @@
 """Message handler for processing navigation status updates"""
 
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 from typing import Optional
 from .dashboard_state import DashboardState
-from .socket_client import SocketClient
+from .components.socket_client import SocketClient
 from ..utils.constants import robot_messages
 
 
@@ -68,23 +69,22 @@ class MessageHandler:
             
             case 'From Neuronavigation: Update tracker poses':
                 self._handle_tracker_poses(data)
-            
+
+                if any(data['visibilities']):
+                    self.dashboard.camera_set = True
+
+                    self.dashboard.probe_visible = data['visibilities'][0]
+                    self.dashboard.head_visible = data['visibilities'][1]
+                    self.dashboard.coil_visible = all(data['visibilities'][2:])
+
+                else:
+                    self.dashboard.camera_set = False
+                    self.dashboard.probe_visible = False
+                    self.dashboard.head_visible = False
+                    self.dashboard.coil_visible = False
+                
             case 'Neuronavigation to Robot: Update displacement to target':
                 self._handle_displacement(data)
-            
-            case "Sensors ID":
-                self.dashboard.camera_set = True
-
-                self.dashboard.probe_visible = data[0]
-                self.dashboard.head_visible = data[1]
-                self.dashboard.coil_visible = all(data[2:])
-            
-            case 'Remove sensors ID':
-                self.dashboard.camera_set = False
-
-                self.dashboard.probe_visible = False
-                self.dashboard.head_visible = False
-                self.dashboard.coil_visible = False
             
             case 'Tracker fiducials set':
                 self.dashboard.tracker_LE_set = True
@@ -102,12 +102,32 @@ class MessageHandler:
             case 'Open navigation menu':
                 self.dashboard.matrix_set = True
             
-            case "Set target":
-                print("Set target")
+            case "Neuronavigation to Robot: Set target":
                 self.dashboard.target_set = True
-            
-            case 'Unset target':
+                
+                # Extract target position from transformation matrix
+                if 'target' in data:
+                    target_matrix = np.array(data['target'])
+                    
+                    # Check if it's a 4x4 transformation matrix
+                    if target_matrix.shape == (4, 4):
+
+                        R_mat = target_matrix[:3, :3]
+
+                        rot = R.from_matrix(R_mat)
+
+                        # alpha (X), beta (Y), gamma (Z)
+                        alpha, beta, gamma = rot.as_euler('xyz', degrees=True)
+                        
+                        # Store as tuple [x, y, z, rx, ry, rz]
+                        self.dashboard.target_location = (
+                            target_matrix[1][3], -target_matrix[2][3], -target_matrix[0][3],
+                            alpha,beta,gamma
+                        )
+
+            case "Neuronavigation to Robot: Unset target":
                 self.dashboard.target_set = False
+                self.dashboard.target_location = (0, 0, 0, 0, 0, 0)
 
             case "Robot to Neuronavigation: Set objective":
                 self.dashboard.robot_moving = False if data["objective"] == 0 else True
@@ -147,30 +167,25 @@ class MessageHandler:
     def _handle_tracker_poses(self, data):
         """Handle tracker pose updates."""
         poses = data['poses']
-        
+        print(poses[2][0], poses[2][1], poses[2][1])
         # Convert angles to degrees
         self.dashboard.probe_location = (
-            poses[0][0], poses[0][1], poses[0][2],
-            np.degrees(poses[0][3]), np.degrees(poses[0][4]), np.degrees(poses[0][5])
+            poses[0][1], -poses[0][2], -poses[0][0],
+            np.radians(poses[0][4]), -np.radians(poses[0][5]), np.radians(poses[0][3])
         )
         self.dashboard.head_location = (
-            poses[1][0], poses[1][1], poses[1][2],
-            np.degrees(poses[1][3]), np.degrees(poses[1][4]), np.degrees(poses[1][5])
+            poses[1][1], -poses[1][2], -poses[1][0],
+            np.radians(poses[1][4]), -np.radians(poses[1][5]), np.radians(poses[1][3])
         )
         self.dashboard.coil_location = (
-            poses[2][0], poses[2][1], poses[2][2],
-            np.degrees(poses[2][3]), np.degrees(poses[2][4]), np.degrees(poses[2][5])
+            poses[2][1], -poses[2][2], -poses[2][0],
+            np.radians(poses[2][4]), -np.radians(poses[2][5]), np.radians(poses[2][3])
         )
-        self.dashboard.target_location = (
-            poses[3][0], poses[3][1], poses[3][2],
-            np.degrees(poses[3][3]), np.degrees(poses[3][4]), np.degrees(poses[3][5])
-        )
-    
+
     def _handle_displacement(self, data):
         """Handle displacement to target update."""
         self.dashboard.displacement = list(map(lambda x: data['displacement'][x], range(6)))
-        self.dashboard.module_distance = np.linalg.norm(self.dashboard.displacement[:3])
-        self.dashboard.module_distance = str(round(self.dashboard.module_distance, 2)) + " mm"
+        self.dashboard.module_displacement = np.linalg.norm(self.dashboard.displacement[:3])
 
         # Update displacement history for plotting
         self.dashboard.add_displacement_sample()
