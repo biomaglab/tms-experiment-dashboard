@@ -4,7 +4,7 @@
   <img src="https://github.com/biomaglab.png" width="100px" alt="Logo Biomag">
 </p>
 
-> Web-based graphical interface for visualization, control and documenting events during TMS experiments coupled with EMG using InVesalius.
+> Web-based graphical interface for visualization, control and documenting events during TMS experiments coupled with EMG using neuronavigation with InVesalius.
 
 ## 🚀 Quick Installation
 
@@ -40,7 +40,6 @@ pip install -e .
 
 # Install NiceGUI
 pip install -e .[nicegui]
-
 ```
 
 ## ✨ How to Use
@@ -54,7 +53,7 @@ uv run python scripts/relay_server.py 127.0.0.1 5000
 
 **With pip/venv:**
 ```bash
-# Certifique-se que o ambiente virtual está ativado
+# Make sure the virtual environment is activated
 python scripts/relay_server.py 127.0.0.1 5000
 ```
 
@@ -72,13 +71,13 @@ python /path/to/invesalius3/app.py --remote-host http://localhost:5000
 uv run python main.py
 ```
 
-**Com pip/venv:**
+**With pip/venv:**
 ```bash
 # Make sure the virtual environment is activated
 python main.py
 ```
 
-**Acess:**
+### **Acess:**
 - NiceGUI: http://localhost:8084
 
 ## 🤝 Collaborators
