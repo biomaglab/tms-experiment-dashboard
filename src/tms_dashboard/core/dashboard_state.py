@@ -74,6 +74,9 @@ class DashboardState:
         self.end_date = '2024-02-01'
         self.experiment_details = 'Paired pulse contralateral conditioning. Paradigm with motor mapping totaling 80 trials with 20 pulses/condition. Target muscle: APB. Inter-pulse interval: 7 to 10 s.'
         
+        # Checklist for experiment
+        self.experiment_checklist = ['Check the equipment connections.', 'Position subject marker', 'Prepare EMG electrodes']
+        
         # Stimulation parameters
         self.conditioning_stimulus = 'right ventral premotor cortex (rPMv)'
         self.test_stimulus = 'left M1'
