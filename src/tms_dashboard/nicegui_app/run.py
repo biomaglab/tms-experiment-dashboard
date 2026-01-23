@@ -107,6 +107,6 @@ def main():
 
 
 if __name__ == "__main__":
-    print("🚀 Iniciando TMS Dashboard com NiceGUI...")
-    print(f"📡 Acesse: http://localhost:{NICEGUI_PORT}")
+    print("🚀 Starting TMS Dashboard with NiceGUI...")
+    print(f"📡 Acess: http://localhost:{NICEGUI_PORT}")
     main()
