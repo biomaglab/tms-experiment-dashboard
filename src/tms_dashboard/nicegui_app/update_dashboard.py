@@ -60,44 +60,33 @@ class UpdateDashboard:
 
         dashboard = self.dashboard
         # Check if plot exists
-        if not hasattr(dashboard, 'displacement_plot'):
+        if not hasattr(dashboard, 'displacement_ax'):
             return
         
-        # Convert deques to lists for Plotly
+        # Convert deques to lists for plotting
         time_data = list(dashboard.displacement_time_history)
         x_data = list(dashboard.displacement_history_x)
         y_data = list(dashboard.displacement_history_y)
         z_data = list(dashboard.displacement_history_z)
         
-        # Update plot data
-        dashboard.displacement_plot.update_figure({
-            'data': [
-                {
-                    'x': time_data,
-                    'y': x_data,
-                    'mode': 'lines',
-                    'name': 'X axis',
-                    'line': {'color': '#ef4444', 'width': 2.5},
-                    'hovertemplate': '<b>X: %{y:.2f} mm</b><br>Time: %{x:.1f}s<extra></extra>'
-                },
-                {
-                    'x': time_data,
-                    'y': y_data,
-                    'mode': 'lines',
-                    'name': 'Y axis',
-                    'line': {'color': '#10b981', 'width': 2.5},
-                    'hovertemplate': '<b>Y: %{y:.2f} mm</b><br>Time: %{x:.1f}s<extra></extra>'
-                },
-                {
-                    'x': time_data,
-                    'y': z_data,
-                    'mode': 'lines',
-                    'name': 'Z axis',
-                    'line': {'color': '#3b82f6', 'width': 2.5},
-                    'hovertemplate': '<b>Z: %{y:.2f} mm</b><br>Time: %{x:.1f}s<extra></extra>'
-                }
-            ]
-        })
+        # Clear and redraw the plot
+        ax = dashboard.displacement_ax
+        ax.clear()
+        
+        # Plot the three lines
+        ax.plot(time_data, x_data, color='#ef4444', linewidth=2.5, label='X axis')
+        ax.plot(time_data, y_data, color='#10b981', linewidth=2.5, label='Y axis')
+        ax.plot(time_data, z_data, color='#3b82f6', linewidth=2.5, label='Z axis')
+        
+        # Restore styling
+        ax.set_xlabel('Time (s)', fontsize=10)
+        ax.set_ylabel('Displacement (mm)', fontsize=10)
+        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+        ax.set_facecolor('#fafafa')
+        ax.legend(loc='upper right', fontsize=9, framealpha=0.9)
+        
+        # Update the plot widget
+        dashboard.displacement_plot.update()
         
     def update_buttons(self):
         dashboard = self.dashboard
