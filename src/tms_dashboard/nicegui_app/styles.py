@@ -108,8 +108,8 @@ def change_color(dashboard, target_label: str, new_status: str, colors: tuple = 
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
     if hasattr(dashboard, icon_key):
         icon = getattr(dashboard, icon_key)
-        icon.style(f'font-size: 22px; color: {color};')
-        icon.update()
+        # icon.style(f'font-size: 22px; color: {color};')
+        # icon.update()
 
 def change_icon(dashboard, target_label: str, new_status: str):
     """Change the icon of a label based on status."""

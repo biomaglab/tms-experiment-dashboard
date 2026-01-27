@@ -3,7 +3,7 @@
 """Navigation controls widget."""
 
 from nicegui import ui
-from ....core.dashboard_state import DashboardState
+from tms_dashboard.core.dashboard_state import DashboardState
 
 
 def create_navigation_controls(dashboard: DashboardState):

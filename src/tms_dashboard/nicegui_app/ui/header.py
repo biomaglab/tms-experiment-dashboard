@@ -3,9 +3,9 @@
 """Header component for NiceGUI app - Alternative Modal Approach"""
 
 from nicegui import ui
-from ...config import IMAGES_DIR, CSV_PATH
-from ...core.dashboard_state import DashboardState
-from ...core.data_logger import DataLogger
+from tms_dashboard.config import IMAGES_DIR, CSV_PATH
+from tms_dashboard.core.dashboard_state import DashboardState
+from tms_dashboard.core.data_logger import DataLogger
 
 
 def create_header(dashboard: DashboardState):

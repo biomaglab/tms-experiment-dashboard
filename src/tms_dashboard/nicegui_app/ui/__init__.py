@@ -4,11 +4,8 @@
 
 from .header import create_header
 from .dashboard_tabs import create_dashboard_tabs
-from .navigation_3d import create_navigation_3d, create_3d_scene_with_models
 
 __all__ = [
     'create_header',
     'create_dashboard_tabs',
-    'create_navigation_3d',
-    'create_3d_scene_with_models',
 ]

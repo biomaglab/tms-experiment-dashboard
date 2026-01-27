@@ -3,9 +3,9 @@
 """Experiment form component for NiceGUI app - Modal Dialog"""
 
 from nicegui import ui
-from ...core.dashboard_state import DashboardState
-from ...core.data_logger import DataLogger
-from ...config import CSV_PATH
+from tms_dashboard.core.dashboard_state import DashboardState
+from tms_dashboard.core.data_logger import DataLogger
+from tms_dashboard.config import CSV_PATH
 
 
 def create_experiment_form(dashboard: DashboardState):

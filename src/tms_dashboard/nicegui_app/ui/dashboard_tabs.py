@@ -3,12 +3,13 @@
 """Dashboard tabs component - 2x2 grid layout with time series graph"""
 
 from nicegui import ui
-from ...core.dashboard_state import DashboardState
-from .navigation_3d import create_3d_scene_with_models
+from tms_dashboard.core.dashboard_state import DashboardState
 from .widgets import (
     create_status_widgets,
     create_time_series_panel,
     create_navigation_controls,
+    create_3d_scene_with_models,
+
 )
 
 

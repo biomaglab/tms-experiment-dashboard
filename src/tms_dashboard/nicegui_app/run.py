@@ -7,22 +7,22 @@ import time
 from nicegui import ui
 import traceback
 
-from ..config import DEFAULT_HOST, DEFAULT_PORT, NICEGUI_PORT
-from ..core.dashboard_state import DashboardState
-from ..core.socket_client import SocketClient
-from ..core.message_handler import MessageHandler
-from .update_dashboard import UpdateDashboard
-from .components import create_header, create_dashboard_tabs
+from tms_dashboard.config import DEFAULT_HOST, DEFAULT_PORT, NICEGUI_PORT, TriggerType
+from tms_dashboard.core.dashboard_state import DashboardState
+from tms_dashboard.core.modules.socket_client import SocketClient
+from tms_dashboard.core.modules.emg_connection import neuroOne
+from tms_dashboard.core.message_handler import MessageHandler
+from tms_dashboard.nicegui_app.update_dashboard import UpdateDashboard
+from tms_dashboard.nicegui_app.ui import create_header, create_dashboard_tabs
 # Global shared instances (persist across all sessions)
 dashboard = DashboardState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
 message_handler = MessageHandler(socket_client, dashboard)
-update_dashboard = UpdateDashboard(dashboard)
-
+neuroone_connection = neuroOne(num_trial=20, t_min=-0.01, t_max=0.04, ch=33, trigger_type_interest=TriggerType.STIMULUS)
+update_dashboard = UpdateDashboard(dashboard, neuroone_connection)
 
 # Flag to ensure background thread starts only once
 _background_thread_started = False
-
 
 def start_background_services():
     """Start background services (socket client and message processing thread).
@@ -42,18 +42,21 @@ def start_background_services():
         while True:
             try:
                 time.sleep(0.1)
-                message_handler.process_messages()
                 update_dashboard.update()
-            except Exception:
+                message_handler.process_messages()
+            except Exception as e:
+                print("Error processing messages", e)
                 traceback.print_exc()
+
+    # Start socket client
+    socket_client.connect()
+    neuroone_connection.start()
     
     # Start message processing thread
     threading.Thread(target=process_messages_loop, daemon=True, name="MessageProcessor").start()
     
-    # Start socket client
-    socket_client.connect()
     
-    print("✅ Background services started (socket client + message processor)")
+    print("Background services started (socket client + message processor)")
 
 
 @ui.page('/')
@@ -94,9 +97,3 @@ def main():
         title="TMS Dashboard",
         favicon="🧠"
     )
-
-
-if __name__ == "__main__":
-    print("🚀 Iniciando TMS Dashboard com NiceGUI...")
-    print(f"📡 Acesse: http://localhost:8084")
-    main()

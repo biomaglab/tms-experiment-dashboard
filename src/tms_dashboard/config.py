@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Configuration settings for TMS Experiment Dashboard"""
 
-import os
+from enum import Enum
 from pathlib import Path
 
 # Project paths
@@ -30,3 +30,13 @@ CSV_PATH = DATA_DIR / CSV_FILE
 
 # Ensure data directory exists
 DATA_DIR.mkdir(exist_ok=True)
+
+class TriggerType(Enum):
+    DISABLED = 0
+    STIMULUS = 1
+    VIDEO = 2
+    MUTE = 3
+    PARALLEL = 4
+
+
+
