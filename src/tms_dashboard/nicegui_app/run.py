@@ -8,7 +8,7 @@ from nicegui import ui
 
 from ..config import DEFAULT_HOST, DEFAULT_PORT, NICEGUI_PORT
 from ..core.dashboard_state import DashboardState
-from ..core.socket_client import SocketClient
+from ..core.components.socket_client import SocketClient
 from ..core.message_handler import MessageHandler
 from .update_dashboard import UpdateDashboard
 from .components import create_header, create_dashboard_tabs, create_checklist_tab
