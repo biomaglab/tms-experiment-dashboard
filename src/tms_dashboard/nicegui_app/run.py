@@ -11,7 +11,7 @@ from ..core.dashboard_state import DashboardState
 from ..core.components.socket_client import SocketClient
 from ..core.message_handler import MessageHandler
 from .update_dashboard import UpdateDashboard
-from .components import create_header, create_dashboard_tabs, create_checklist_tab
+from .components import create_header, create_dashboard_tabs
 # Global shared instances (persist across all sessions)
 dashboard = DashboardState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
@@ -76,18 +76,7 @@ def index():
     
     # Build UI using shared dashboard instance
     create_header(dashboard)
-    
-    # Main tabs
-    with ui.tabs().classes('w-full') as tabs:
-        dashboard_tab = ui.tab('Dashboard')
-        checklist_tab = ui.tab('Checklist')
-    
-    with ui.tab_panels(tabs, value=dashboard_tab).classes('w-full').style('height: calc(100vh - 110px);'):
-        with ui.tab_panel(dashboard_tab):
-            create_dashboard_tabs(dashboard)
-        
-        with ui.tab_panel(checklist_tab):
-            create_checklist_tab(dashboard)
+    create_dashboard_tabs(dashboard)
 
 
 def main():
@@ -107,6 +96,6 @@ def main():
 
 
 if __name__ == "__main__":
-    print("🚀 Starting TMS Dashboard with NiceGUI...")
-    print(f"📡 Acess: http://localhost:{NICEGUI_PORT}")
+    print("🚀 Iniciando TMS Dashboard com NiceGUI...")
+    print(f"📡 Acesse: http://localhost:8084")
     main()

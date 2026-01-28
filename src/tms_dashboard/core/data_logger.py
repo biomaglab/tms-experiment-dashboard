@@ -58,7 +58,6 @@ class DataLogger:
         start_date: str = "",
         end_date: str = "",
         experiment_details: str = "",
-        experiment_checklist: list = None,
         conditioning_stimulus: str = "",
         test_stimulus: str = "",
         number_intervals: str = "",
@@ -76,16 +75,12 @@ class DataLogger:
         Returns:
             Dictionary with labeled experiment data
         """
-        if experiment_checklist is None:
-            experiment_checklist = []
-        
         return {
             "Experiment Name": experiment_name,
             "Experiment Description": experiment_description,
             "Start Date": start_date,
             "End Date": end_date,
             "Experiment Details": experiment_details,
-            "Experiment Checklist": "; ".join(experiment_checklist),  # Join list into string for CSV
             "Conditioning Stimulus": conditioning_stimulus,
             "Test Stimulus": test_stimulus,
             "Number of Intervals": number_intervals,

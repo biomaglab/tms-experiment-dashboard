@@ -70,31 +70,9 @@ class DashboardState:
         # Experiment metadata with default values
         self.experiment_name = 'Paired pulse, dual site, bilateral, leftM1-rightPMv'
         self.experiment_description = 'Dual site paired bilateral TMS stimulation, with 2 channel EMG acquisition. 80 trials, 4 experimental conditions, 200 pulses'
-        self.start_datetime = '2025-01-31T10:00'
-        self.experiment_objective = 'Assess motor cortex plasticity'
-        self.protocol_description = 'Paired pulse contralateral conditioning. Paradigm with motor mapping totaling 80 trials with 20 pulses/condition. Target muscle: APB. Inter-pulse interval: 7 to 10 s.'
-        
-        # TMS technical details
-        self.tms_equipment_brand = ''
-        self.tms_equipment_model = ''
-        self.coil_type = ''
-        self.coil_orientation = ''
-        self.coil_position = ''
-        self.stimulus_intensity = ''
-        self.isi_value = ''  # Interstimulus interval (ms)
-        self.number_pulses = ''
-        self.stimulation_frequency = ''  # Hz
-        self.stimulation_duration = ''  # minutes
-        
-        # EMG technical details
-        self.emg_equipment_model = ''
-        self.emg_sampling_rate = ''  # Hz
-        self.muscle_recorded = ''
-        self.electrode_position = ''
-        
-        # Checklist for experiment
-        self.experiment_checklist = ['Check the equipment connections.', 'Position subject marker', 'Prepare EMG electrodes']
-        self.checklist_checked = {str(i): False for i in range(len(self.experiment_checklist))}
+        self.start_date = '2025-01-31'
+        self.end_date = '2024-02-01'
+        self.experiment_details = 'Paired pulse contralateral conditioning. Paradigm with motor mapping totaling 80 trials with 20 pulses/condition. Target muscle: APB. Inter-pulse interval: 7 to 10 s.'
         
         # Stimulation parameters
         self.conditioning_stimulus = 'right ventral premotor cortex (rPMv)'

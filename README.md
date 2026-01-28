@@ -4,83 +4,96 @@
   <img src="https://github.com/biomaglab.png" width="100px" alt="Logo Biomag">
 </p>
 
-> Web-based graphical interface for visualization, control and documenting events during TMS experiments coupled with EMG using neuronavigation with InVesalius.
+> Interface gráfica web moderna para visualização e controle de eventos durante experimentos de TMS acoplados a EMG usando o InVesalius.
 
-## 🚀 Quick Installation
+## 🚀 Instalação Rápida
 
-### Option 1: With uv (Recommended)
+### Opção 1: Com uv (Recomendado)
 
 ```bash
-# Clone source repository
+# Clone o repositório
 git clone git@github.com:biomaglab/tms-experiment-dashboard.git
 cd tms-experiment-dashboard
 
-# Install NiceGUI
+# Instale com NiceGUI (recomendado)
 uv sync --extra nicegui
+
+# OU instale com Streamlit
+uv sync --extra streamlit
+
+# OU instale ambos
+uv sync --extra all
 ```
 
-### Option 2: With pip/venv (Traditional)
+### Opção 2: Com pip/venv (Tradicional)
 
 ```bash
-# Clone source repository
+# Clone o repositório
 git clone git@github.com:biomaglab/tms-experiment-dashboard.git
 cd tms-experiment-dashboard
 
-# Create a virtual environment
+# Crie um ambiente virtual
 python -m venv .venv
 
-# Activate the virtual environment
+# Ative o ambiente virtual
 # Windows:
 .venv\Scripts\activate
 # Linux/Mac:
 source .venv/bin/activate
 
-# Install dependencies
+# Instale as dependências
 pip install -e .
 
-# Install NiceGUI
+# OU instale com NiceGUI
 pip install -e .[nicegui]
+
+# OU instale com Streamlit
+pip install -e .[streamlit]
+
+# OU instale com ambos
+pip install -e .[all]
 ```
 
-## ✨ How to Use
+## ☕ Como Usar
 
-### 1. Start the relay server.
+### 1. Inicie o servidor de relay
 
-**With uv:**
+**Com uv:**
 ```bash
 uv run python scripts/relay_server.py 127.0.0.1 5000
 ```
 
-**With pip/venv:**
+**Com pip/venv:**
 ```bash
-# Make sure the virtual environment is activated
+# Certifique-se que o ambiente virtual está ativado
 python scripts/relay_server.py 127.0.0.1 5000
 ```
 
-### 2. (Optional) Start InVesalius
+### 2. (Opcional) Inicie o InVesalius
 
 ```bash
-python /path/to/invesalius3/app.py --remote-host http://localhost:5000
+python /caminho/para/invesalius3/app.py --remote-host http://localhost:5000
 ```
 
-### 3. Start the Dashboard
+### 3. Inicie o Dashboard
 
-**With uv:**
+**Com uv:**
 ```bash
-# Automatic detection (NiceGUI)
+# Auto-detecção (NiceGUI ou Streamlit)
 uv run python main.py
 ```
 
-**With pip/venv:**
+**Com pip/venv:**
 ```bash
-# Make sure the virtual environment is activated
+# Certifique-se que o ambiente virtual está ativado
 python main.py
 ```
 
-### **Acess:**
+**Acesso:**
 - NiceGUI: http://localhost:8084
+- Streamlit: Abre automaticamente no navegador
 
-## 🤝 Collaborators
+## 🤝 Colaboradores
 
 <table>
   <tr>
@@ -128,8 +141,8 @@ python main.py
 
 ##  Licença
 
-This project is licensed. Check the file. [LICENÇA](LICENSE.md) for further details.
+Esse projeto está sob licença. Veja o arquivo [LICENÇA](LICENSE.md) para mais detalhes.
 
 ## NeuroMat Support
 
-This work is supported by NeuroMat - Centro de Pesquisa, Inovação e Difusão em Neuromatemática (CEPID NeuroMat) established in 2013 at the University of São Paulo (USP). Homepage: http://neuromat.numec.prp.usp.br
+Este trabalho é apoiado pelo NeuroMat - Centro de Pesquisa, Inovação e Difusão em Neuromatemática (CEPID NeuroMat) estabelecido em 2013 na Universidade de São Paulo. Homepage: http://neuromat.numec.prp.usp.br
