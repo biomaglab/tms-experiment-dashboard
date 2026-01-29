@@ -139,11 +139,9 @@ class MessageHandler:
                     self.dashboard.at_target = False
             
             case "Start navigation":
-                # Start navigation = button pressed (True)
                 self.dashboard.navigation_button_pressed = True
 
             case "Stop navigation":
-                # Stop navigation = button not pressed (False)
                 self.dashboard.navigation_button_pressed = False
               
     def _handle_image_fiducial(self, data):

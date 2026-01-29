@@ -22,7 +22,7 @@ class DashboardState:
     def __init__(self):
         # Navigation button status
         self.navigation_button_pressed = False
-        self.navigation_button_ui = None  # UI element reference for START NAVIGATION button
+        self.navigation_button_ui = None
 
         # Connection and setup status
         self.project_set = False
