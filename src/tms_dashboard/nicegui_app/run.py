@@ -22,7 +22,7 @@ socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
 message_handler = MessageHandler(socket_client, dashboard)
 neuroone_connection = neuroOne(num_trial=20, t_min=-0.01, t_max=0.04, ch=33, trigger_type_interest=TriggerType.STIMULUS)
 update_dashboard = UpdateDashboard(dashboard, neuroone_connection)
-message_emit = Message2Server(socket_client)
+message_emit = Message2Server(socket_client, dashboard)
 
 # Flag to ensure background thread starts only once
 _background_thread_started = False

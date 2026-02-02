@@ -50,22 +50,52 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
     # Robot Control column
     with ui.column().style('gap: 5px; flex: 1; height: 100%;'):
         ui.label('Robot Control').style('font-size: 1rem; font-weight: 600; margin-bottom: 8px;')
+
+        def _free_drive_click(e=None):
+            success = message_emit.free_drive_robot()
+
+            if success:
+                ui.notify('Create target sent', position='top')
+            else:
+                ui.notify('Failed to send Create marker', position='top')
         
-        ui.button('Free Drive Robot', icon='gesture').props('flat outlined').classes('w-full').style(
+        button = ui.button('Free Drive Robot', icon='gesture', on_click=_free_drive_click).props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
             'min-height: 50px;'
         )
 
+        dashboard.__dict__["free_drive_button"] =  button
+
         ui.separator().style('margin: 4px 0;')
+
+        def _active_robot_click(e=None):
+            success = message_emit.active_robot()
+
+            if success:
+                ui.notify('Create target sent', position='top')
+            else:
+                ui.notify('Failed to send Create marker', position='top')
         
-        ui.button('Active Robot', icon='settings_remote').props('flat outlined').classes('w-full').style(
+        button = ui.button('Active Robot', icon='settings_remote', on_click=_active_robot_click).props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
             'min-height: 50px;'
         )
+
+        dashboard.__dict__["active_robot_button"] =  button
         
         ui.separator().style('margin: 4px 0;')
 
-        ui.button('Move Upward Robot', icon='arrow_upward').props('flat outlined').classes('w-full').style(
+        def _upward_click(e=None):
+            success = message_emit.move_upward_robot()
+
+            if success:
+                ui.notify('Create target sent', position='top')
+            else:
+                ui.notify('Failed to send Create marker', position='top')
+
+        button = ui.button('Move Upward Robot', icon='arrow_upward', on_click=_upward_click).props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
             'min-height: 50px;'
         )
+
+        dashboard.__dict__["upward_robot_button"] =  button
