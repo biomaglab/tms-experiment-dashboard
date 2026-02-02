@@ -91,27 +91,6 @@ def change_color(dashboard, target_label: str, new_status: str, colors: tuple = 
         new_status: Status - 'success' or 'neutral'
         colors: Optional tuple (active_color, inactive_color) for buttons
     """
-    # Special handling for the START NAVIGATION button
-    if target_label.lower().replace(' ', '_') == 'navigation_button' and hasattr(dashboard, 'navigation_button_ui'):
-        button = getattr(dashboard, 'navigation_button_ui')
-        if button is not None and colors is not None:
-            # colors tuple: (active_color, inactive_color)
-            target_color = colors[0] if new_status == 'success' else colors[1]
-            try:
-                # Preferred API
-                if hasattr(button, 'set_background_color'):
-                    button.set_background_color(target_color)
-                else:
-                    # Fallback: inline style
-                    button.style(f'background-color: {target_color};')
-                try:
-                    button.update()
-                except Exception:
-                    pass
-            except Exception:
-                # Safely ignore styling errors
-                pass
-        return
 
     # Fallback: original label/icon logic
     if colors is None:
@@ -151,3 +130,16 @@ def change_label(dashboard, target_label: str, new_text: str):
 
 def get_status(condition: bool) -> str:
     return 'success' if condition else 'neutral'
+
+def change_button(dashboard, target_label: str, new_status: str, colors: tuple = None):
+    # Special handling for the START NAVIGATION button
+    if hasattr(dashboard, target_label):
+        if colors is None:
+            color = '#10b981' if new_status == 'success' else '#9ca3af'
+        else:
+            color = colors[0] if new_status == 'success' else colors[1]
+
+        button = getattr(dashboard, target_label)
+        # Fallback: inline style
+        button.style(f'background-color: {color} !important;')
+        button.update()

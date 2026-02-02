@@ -6,7 +6,7 @@ from nicegui import ui
 from tms_dashboard.core.dashboard_state import DashboardState
 
 
-def create_navigation_controls(dashboard: DashboardState):
+def create_navigation_controls(dashboard: DashboardState, message_emit):
     """Create navigation and robot control buttons.
     
     Contains two columns:
@@ -29,29 +29,14 @@ def create_navigation_controls(dashboard: DashboardState):
                 'min-height: 60px;'
             )
             # Save UI reference so the updater can change its color
-            try:
-                dashboard.navigation_button_ui = nav_button
-            except Exception:
-                # dashboard may be a simple object without that attribute in some tests
-                pass
-            
+            dashboard.__dict__['navigation_button'] = nav_button
+
             ui.separator().style('margin: 4px 0;')
             
             # Create Target button
             def _create_target_click(e=None):
-                # Import inside handler to avoid circular imports
-                try:
-                    from tms_dashboard.nicegui_app.run import socket_client
-                except Exception as exc:
-                    print(f"[UI] Could not import socket_client: {exc}")
-                    ui.notify('Error: connection not available', position='top')
-                    return
+                success = message_emit.create_marker()
 
-                if not socket_client.is_connected:
-                    ui.notify('Relay server not connected', position='top')
-                    return
-
-                success = socket_client.send_create_marker()
                 if success:
                     ui.notify('Create target sent', position='top')
                 else:

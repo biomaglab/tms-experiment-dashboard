@@ -126,14 +126,6 @@ class SocketClient:
         except Exception as e:
             print(f"[SocketClient] Error emitting event '{event}': {e}")
             return False
-
-    def send_create_marker(self):
-        """Convenience helper to send the Create marker command to neuronavigation via relay.
-
-        The relay expects a 'from_robot' event to be forwarded to the neuronavigation client as 'to_neuronavigation'.
-        """
-        payload = {'topic': 'Create marker', 'data': {}}
-        return self.emit_event('from_robot', payload)
     
     def get_buffer(self) -> list:
         """Retorna todas as mensagens do buffer (não bloqueia).

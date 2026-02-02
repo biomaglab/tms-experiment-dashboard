@@ -169,7 +169,6 @@ class MessageHandler:
     def _handle_tracker_poses(self, data):
         """Handle tracker pose updates."""
         poses = data['poses']
-        print(poses[2][0], poses[2][1], poses[2][1])
         # Convert angles to degrees
         self.dashboard.probe_location = (
             poses[0][1], -poses[0][2], -poses[0][0],

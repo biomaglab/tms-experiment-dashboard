@@ -1,7 +1,7 @@
 import numpy as np
 
 from tms_dashboard.utils.signal_processing import set_apply_baseline_all
-from tms_dashboard.nicegui_app.styles import change_color, change_icon, change_label, get_status
+from tms_dashboard.nicegui_app.styles import change_color, change_icon, change_label, get_status, change_button 
 
 class UpdateDashboard:
     def __init__(self, dashboard, emg_connection):
@@ -146,4 +146,4 @@ class UpdateDashboard:
         dashboard = self.dashboard
         """Update all dashboard buttons."""
         status = get_status(dashboard.navigation_button_pressed)
-        change_color(dashboard, "navigation_button", status, ("#21BA45", "#9ca3af"))
+        change_button(dashboard, "navigation_button", status)
