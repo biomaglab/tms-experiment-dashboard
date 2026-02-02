@@ -137,7 +137,7 @@ class MessageHandler:
                     self.dashboard.at_target = True
                 else:
                     self.dashboard.at_target = False
-            
+
             case "Press navigation button":
                 self.dashboard.navigation_button_pressed = data["cond"]
     

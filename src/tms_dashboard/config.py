@@ -12,7 +12,7 @@ STATIC_DIR = PROJECT_ROOT / "src" / "tms_dashboard" / "static"
 IMAGES_DIR = STATIC_DIR / "images"
 
 # Socket connection settings
-DEFAULT_HOST = '127.0.0.1'
+DEFAULT_HOST = '143.107.220.213'
 DEFAULT_PORT = 5000
 
 # Alternative hosts (commented out for reference)

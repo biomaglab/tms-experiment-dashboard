@@ -5,7 +5,8 @@
 from nicegui import ui
 import math
 from tms_dashboard.core.dashboard_state import DashboardState
-from tms_dashboard.utils.coordinate_transform import InVesaliusToThreeJS
+from tms_dashboard.utils.coordinate_transform import compute_relative_pose
+from scipy.spatial.transform import Rotation as R
 
 class CoordinateSystem(ui.scene.group):
 
@@ -38,9 +39,10 @@ def create_3d_scene_with_models(dashboard: DashboardState):
 
     # Full height scene - fills parent container
     with ui.scene().classes('w-full h-full') as scene:
-        # Head model - static in scene
+        # Head model - positioned at origin (head coordinates)
         head_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/head.stl'
-        # head = scene.stl(head_url).scale(0.17).move(0, 0, 9).rotate(1.57, 0, -0.3)
+        head_stl = scene.stl(head_url).scale(SCALE).material('#f0d5a0', opacity=0.6)
+        head_stl.move(0, 0, 0).rotate(0, 0, 0)  # Head at origin in scene
         
         # Coil model - will move based on displacement
         coil_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/magstim_fig8_coil.stl'
@@ -55,44 +57,84 @@ def create_3d_scene_with_models(dashboard: DashboardState):
         # Timer to update object positions from dashboard state
         def update_positions():
             if dashboard.target_set:
-                # Calculate relative positions (coil and target relative to head)
-
-                target_marker_stl.material(color= "yellow", opacity=1)
-                coil_stl.move(
-                    (dashboard.coil_location[0] - dashboard.head_location[0]) * SCALE,
-                    (dashboard.coil_location[1] - dashboard.head_location[1]) * SCALE,
-                    (dashboard.coil_location[2] - dashboard.head_location[2]) * SCALE)
-                coil_stl.rotate(
-                    (dashboard.coil_location[3] - dashboard.head_location[3]),
-                    (dashboard.coil_location[4] - dashboard.head_location[4]),
-                    (dashboard.coil_location[5] - dashboard.head_location[5])
+                # Calculate coil position relative to head using matrix transformations
+                # dashboard.*_location format: (x, y, z, rx, ry, rz) - already in Three.js coordinates with radians
+                coil_relative = compute_relative_pose(
+                    target_pose=list(dashboard.coil_location),
+                    reference_pose=list(dashboard.head_location)
                 )
-
-                target_x = (dashboard.target_location[0] - dashboard.head_location[0]) * SCALE
-                target_y = (dashboard.target_location[1] - dashboard.head_location[1]) * SCALE
-                target_z = (dashboard.target_location[2] - dashboard.head_location[2]) * SCALE
                 
-                target_marker_stl.move(target_x, target_y, target_z)
-
-                target_aplha = (dashboard.target_location[3] - dashboard.head_location[3])
-                target_beta = (dashboard.target_location[3] - dashboard.head_location[3])
-                target_gamma = (dashboard.target_location[5] - dashboard.head_location[5])
-
-                target_marker_stl.rotate(target_aplha, target_beta, target_gamma)
+                #Extract position and rotation
+                coil_pos = coil_relative[:3]
+                coil_rot = coil_relative[3:]
                 
-                # Update camera position: centered on target, looking down from above
-                # Camera height based on module_distance (larger distance = zoom out)
-                camera_height = dashboard.module_displacement * SCALE * 2  # Scale factor for visual comfort
+                # Apply scale to position only (NOT rotation)
+                # Set absolute position and rotation
+                coil_stl.move(
+                    coil_pos[0] * SCALE,
+                    coil_pos[1] * SCALE,
+                    coil_pos[2] * SCALE
+                )
+                coil_stl.rotate(coil_rot[0], coil_rot[1], coil_rot[2])
+
+                # Calculate target position relative to head
+                target_relative = compute_relative_pose(
+                    target_pose=list(dashboard.target_location),
+                    reference_pose=list(dashboard.head_location)
+                )
                 
-                # Position camera above target
-                # scene.move_camera(
-                #     x=target_x  + camera_height,
-                #     y=target_y + camera_height, # Above target
-                #     z=target_z  + camera_height,
-                #     look_at_x=target_x,  # Look at target
-                #     look_at_y=target_y,
-                #     look_at_z=target_z
-                # )
+                target_pos = target_relative[:3]
+                target_rot = target_relative[3:]
+                
+                # Set target marker position and rotation
+                target_marker_stl.move(
+                    target_pos[0] * SCALE,
+                    target_pos[1] * SCALE,
+                    target_pos[2] * SCALE
+                )
+                target_marker_stl.rotate(target_rot[0], target_rot[1], target_rot[2])
+                target_marker_stl.material(color="yellow", opacity=1)
+                
+                # Dynamic camera: PERPENDICULAR to target plane
+                # Camera should look straight down at target, aligned with target's normal vector
+                
+                # Calculate camera distance based on displacement
+                min_distance = 1.5   # Closest zoom (when at target)
+                max_distance = 12.0  # Farthest zoom (when far from target)
+                
+                displacement_mm = dashboard.module_displacement  # Already in mm
+                normalized_displacement = min(1.0, displacement_mm / 150.0)  # Normalize to 0-1
+                camera_distance = min_distance + (max_distance - min_distance) * normalized_displacement
+                
+                # Get target's rotation to calculate normal vector
+                # Target rotation defines the plane orientation
+                # Testing Y-axis as normal (second column) instead of Z-axis
+                target_rotation = R.from_euler('xyz', target_rot, degrees=False)
+                target_rot_matrix = target_rotation.as_matrix()
+                
+                # Normal vector to target plane - Y-axis (index 1)
+                # Y-axis is perpendicular to target surface in TMS convention
+                # Negate to flip from bottom-up to top-down view
+                normal_vector = -target_rot_matrix[:, 1]  # [nx, ny, nz] - NEGATIVE Y-axis
+                
+                # Position camera along the normal vector at camera_distance from target
+                camera_x = target_pos[0] * SCALE + normal_vector[0] * camera_distance
+                camera_y = target_pos[1] * SCALE + normal_vector[1] * camera_distance
+                camera_z = target_pos[2] * SCALE + normal_vector[2] * camera_distance
+                
+                # Calculate "up" vector for camera orientation (90° rotation)
+                # The up vector defines which direction is "up" in the camera view
+                # We want to rotate 90° to the right, so use X-axis of target
+                up_vector = target_rot_matrix[:, 0]  # X-axis of target (first column)
+                
+                scene.move_camera(
+                    x=camera_x,
+                    y=camera_y,
+                    z=camera_z,
+                    look_at_x=target_pos[0] * SCALE,
+                    look_at_y=target_pos[1] * SCALE,
+                    look_at_z=target_pos[2] * SCALE,
+                )
             
             else:
                 # No target - reset to origin
