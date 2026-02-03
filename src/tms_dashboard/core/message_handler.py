@@ -8,7 +8,7 @@ from typing import Optional
 from .dashboard_state import DashboardState
 from .modules.socket_client import SocketClient
 from tms_dashboard.utils.constants import robot_messages
-
+import time
 
 class MessageHandler:
     """Processes messages from socket client and updates dashboard state."""
@@ -52,6 +52,7 @@ class MessageHandler:
             topic: Message topic string
             data: Message data payload
         """
+
         match topic:
             case 'Set image fiducial':
                 self._handle_image_fiducial(data)
@@ -75,7 +76,7 @@ class MessageHandler:
 
                     self.dashboard.probe_visible = data['visibilities'][0]
                     self.dashboard.head_visible = data['visibilities'][1]
-                    self.dashboard.coil_visible = all(data['visibilities'][2:])
+                    self.dashboard.coil_visible = data['visibilities'][2]
 
                 else:
                     self.dashboard.camera_set = False
@@ -97,7 +98,7 @@ class MessageHandler:
                 self.dashboard.tracker_LE_set = False
             
             case "Robot to Neuronavigation: Robot connection status":
-                self.dashboard.robot_set = True if data['state'] == 'Connected' else False
+                self.dashboard.robot_set = True if data['data'] == 'Connected' else False
             
             case 'Open navigation menu':
                 self.dashboard.matrix_set = True
@@ -138,6 +139,12 @@ class MessageHandler:
                 else:
                     self.dashboard.at_target = False
             
+            case "Press navigation button":
+                self.dashboard.navigation_button_pressed = data["cond"]
+            
+            case "Robot to Neuronavigation: Send force sensor data":
+                self.dashboard.force = data["force_feedback"] 
+    
             case "Start navigation":
                 self.dashboard.navigation_button_pressed = True
 
