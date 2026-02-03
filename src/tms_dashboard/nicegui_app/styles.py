@@ -82,18 +82,19 @@ def section_title_style() -> str:
 
 def change_color(dashboard, target_label: str, new_status: str, colors: tuple = None):
     """Change the color of a label and its associated icon.
-    
-    Apenas duas cores são usadas:
-    - 'success': Verde (#10b981) - Estado ativo/conectado
-    - 'neutral': Cinza (#9ca3af) - Estado inativo/desconectado
-    
+
+    Supports labels/icons (original behavior) and the navigation button.
+
     Args:
         dashboard: DashboardState instance containing label and icon references
-        target_label: Name of the label to update (will be converted to lowercase)
+        target_label: Name of the label/button to update
         new_status: Status - 'success' or 'neutral'
+        colors: Optional tuple (active_color, inactive_color) for buttons
     """
+
+    # Fallback: original label/icon logic
     if colors is None:
-        color = '#10b981' if new_status == 'success' else "#ce6262"  # Verde ou Cinza
+        color = '#10b981' if new_status == 'success' else '#9ca3af'
     else:
         color = colors[0] if new_status == 'success' else colors[1]
 
@@ -103,7 +104,7 @@ def change_color(dashboard, target_label: str, new_status: str, colors: tuple = 
         label = getattr(dashboard, label_key)
         label.style(f'font-size: 1.15rem; color: {color}; font-weight: 500;')
         label.update()
-    
+
     # Update associated icon if exists
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
     if hasattr(dashboard, icon_key):
@@ -129,3 +130,16 @@ def change_label(dashboard, target_label: str, new_text: str):
 
 def get_status(condition: bool) -> str:
     return 'success' if condition else 'neutral'
+
+def change_button(dashboard, target_label: str, new_status: str, colors: tuple = None):
+    # Special handling for the START NAVIGATION button
+    if hasattr(dashboard, target_label):
+        if colors is None:
+            color = '#10b981' if new_status == 'success' else '#9ca3af'
+        else:
+            color = colors[0] if new_status == 'success' else colors[1]
+
+        button = getattr(dashboard, target_label)
+        # Fallback: inline style
+        button.style(f'background-color: {color} !important;')
+        button.update()

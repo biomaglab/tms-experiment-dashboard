@@ -145,6 +145,24 @@ class MessageHandler:
             case "Robot to Neuronavigation: Send force sensor data":
                 self.dashboard.force = data["force_feedback"] 
     
+            case "Start navigation":
+                self.dashboard.navigation_button_pressed = True
+
+            case "Stop navigation":
+                self.dashboard.navigation_button_pressed = False
+
+            case "Neuronavigation to Robot: Set free drive":
+                pressed = data["set"]
+                self.dashboard.free_drive_robot_pressed = pressed
+            
+            case 'Press move away button':
+                pressed = data['pressed']
+                self.dashboard.move_upward_robot_pressed = pressed
+
+            case "Press robot button":
+                pressed = data['pressed']
+                self.dashboard.active_robot_pressed = pressed
+
     def _handle_image_fiducial(self, data):
         """Handle image fiducial setting/unsetting."""
         if data == "":
@@ -170,7 +188,6 @@ class MessageHandler:
     def _handle_tracker_poses(self, data):
         """Handle tracker pose updates."""
         poses = data['poses']
-
         # Convert angles to degrees
         self.dashboard.probe_location = (
             poses[0][1], -poses[0][2], -poses[0][0],

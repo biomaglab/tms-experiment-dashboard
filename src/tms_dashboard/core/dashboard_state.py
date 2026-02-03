@@ -22,6 +22,9 @@ class DashboardState:
     def __init__(self):
         # Navigation button status
         self.navigation_button_pressed = False
+        self.free_drive_robot_pressed = False
+        self.move_upward_robot_pressed = False
+        self.active_robot_pressed = False
 
         # Connection and setup status
         self.project_set = False

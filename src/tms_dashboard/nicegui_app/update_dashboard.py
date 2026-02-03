@@ -1,7 +1,7 @@
 import numpy as np
 
 from tms_dashboard.utils.signal_processing import set_apply_baseline_all
-from tms_dashboard.nicegui_app.styles import change_color, change_icon, change_label, get_status
+from tms_dashboard.nicegui_app.styles import change_color, change_icon, change_label, get_status, change_button 
 
 class UpdateDashboard:
     def __init__(self, dashboard, emg_connection):
@@ -48,6 +48,7 @@ class UpdateDashboard:
         change_color(dashboard, "moving", get_status(dashboard.robot_moving))
         change_color(dashboard, "coil", get_status(dashboard.at_target))
         # change_color(dashboard, "trials", get_status(dashboard.trials_started))
+
 
     def update_indicators(self):
         """Update all dashboard indicators."""
@@ -143,4 +144,7 @@ class UpdateDashboard:
     def update_buttons(self):
         dashboard = self.dashboard
         """Update all dashboard buttons."""
-        change_color(dashboard, "navigation_button", get_status(dashboard.navigation_button_pressed), ("#21BA45", "#C10015"))
+        change_button(dashboard, "navigation_button", get_status(dashboard.navigation_button_pressed))
+        change_button(dashboard, "upward_robot_button", get_status(dashboard.move_upward_robot_pressed), ("#5898d46c", "#ffffff00"))
+        change_button(dashboard, "active_robot_button", get_status(dashboard.active_robot_pressed), ("#5898d46c", "#ffffff00"))  
+        change_button(dashboard, "free_drive_button", get_status(dashboard.free_drive_robot_pressed), ("#5898d46c", "#ffffff00")) 
