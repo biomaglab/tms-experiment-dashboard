@@ -7,7 +7,6 @@ from scipy.spatial.transform import Rotation as R
 from typing import Optional
 from .dashboard_state import DashboardState
 from .modules.socket_client import SocketClient
-from tms_dashboard.utils.constants import robot_messages
 
 
 class MessageHandler:

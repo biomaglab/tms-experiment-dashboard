@@ -58,7 +58,8 @@ def start_background_services():
                                                 neuroone_connection.t_max,
                                                 dashboard.mep_sampling_rate)
                     if dashboard.status_new_mep:
-                        message_emit.send_mep_value(dashboard.mep_history_baseline)
+                        new_meps_only = [dashboard.mep_history_baseline[i] for i in dashboard.new_meps_index]
+                        message_emit.send_mep_value(new_meps_only)
                 else:
                     if dashboard.get_all_state_mep():
                         dashboard.reset_all_state_mep()

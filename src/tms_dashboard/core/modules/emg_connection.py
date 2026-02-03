@@ -43,8 +43,8 @@ class neuroOne:
         self.__last_seq_no = None
         self.__packets_lost = 0
 
-        self.t_min = t_min
-        self.t_max = t_max
+        self.t_min = t_min/1000
+        self.t_max = t_max/1000
         self.ch = ch
         self.trigger_type_interest = trigger_type_interest
 

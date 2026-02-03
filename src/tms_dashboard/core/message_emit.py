@@ -31,8 +31,10 @@ class Message2Server():
     def send_mep_value(self, series_meps: list):
         targets = []
         for mep in series_meps:
-            mep_value = p2p_from_time(mep, self.dashboard.sampling_rate, self.dashboard.t_min)
+            mep_value = p2p_from_time(mep, self.dashboard.mep_sampling_rate, -10)
             target = BrainTargetModel()
             target.mep = mep_value
             targets.append(target.to_dict())
+        
+        self.dashboard.status_new_mep = False
         return self.__send_message2navigation(topic="Set brain targets", data={'brain_targets': targets})

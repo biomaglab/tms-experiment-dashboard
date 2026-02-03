@@ -120,7 +120,6 @@ class DashboardState:
         if len(new_mep_history) == 0:
             return
         if np.array_equal(new_mep_history, self.mep_history):
-            self.status_new_mep = False
             return
         
         self.new_meps_index = new_indexes_fast_tol(self.mep_history, new_mep_history)
