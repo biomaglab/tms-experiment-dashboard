@@ -29,12 +29,13 @@ class Message2Server():
         return self.__send_message2navigation(topic="Press robot button", data= {'pressed': not self.dashboard.active_robot_pressed})
     
     def send_mep_value(self, series_meps: list):
-        targets = []
-        for mep in series_meps:
-            mep_value = p2p_from_time(mep, self.dashboard.mep_sampling_rate, -10)
-            target = BrainTargetModel()
-            target.mep = round(mep_value, 2)
-            targets.append(target.to_dict())
-        
-        self.dashboard.status_new_mep = False
-        return self.__send_message2navigation(topic="Set brain targets", data={'brain_targets': targets})
+        if self.dashboard.at_target:
+            targets = []
+            for mep in series_meps:
+                mep_value = p2p_from_time(mep, self.dashboard.mep_sampling_rate, -10)
+                target = BrainTargetModel()
+                target.mep = round(mep_value, 2)
+                targets.append(target.to_dict())
+            
+            self.dashboard.status_new_mep = False
+            return self.__send_message2navigation(topic="Set brain targets", data={'brain_targets': targets})
