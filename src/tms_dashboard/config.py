@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Configuration settings for TMS Experiment Dashboard"""
 
-from enum import Enum
 from pathlib import Path
 
 # Project paths
@@ -15,11 +14,6 @@ IMAGES_DIR = STATIC_DIR / "images"
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 5000
 
-# Alternative hosts (commented out for reference)
-# HOST_IP_1 = '169.254.128.134'
-# HOST_IP_2 = '169.254.52.180'
-# HOST_IP_3 = '192.168.200.202'
-
 # NiceGUI settings
 NICEGUI_PORT = 8084
 NICEGUI_RELOAD = False
@@ -30,13 +24,4 @@ CSV_PATH = DATA_DIR / CSV_FILE
 
 # Ensure data directory exists
 DATA_DIR.mkdir(exist_ok=True)
-
-class TriggerType(Enum):
-    DISABLED = 0
-    STIMULUS = 1
-    VIDEO = 2
-    MUTE = 3
-    PARALLEL = 4
-
-
 

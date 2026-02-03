@@ -4,7 +4,7 @@ import time
 import threading
 from collections import deque
 
-from tms_dashboard.config import TriggerType
+from tms_dashboard.constants import TriggerType
 
 NEURONE_IP = '192.168.200.220'
 DATA_PORT = 50000
@@ -249,6 +249,13 @@ class neuroOne:
                 'buffer_size': len(self.__buffer),
                 'sampling_rate': self.__sampling_rate
             }
+        
+    def get_pick2pick(self):
+        if self.__connected and self.__status_meansurament and self.__running:
+            with self.__lock:
+                list(self.__triggered_windows_data)
+                return list(self.__triggered_windows_data)
+        return []
     
     def __close_connection(self):
         self.__sock.close()

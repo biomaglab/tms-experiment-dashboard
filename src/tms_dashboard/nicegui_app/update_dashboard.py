@@ -1,6 +1,6 @@
 import numpy as np
 
-from tms_dashboard.utils.signal_processing import set_apply_baseline_all
+from tms_dashboard.utils.signal_processing import set_apply_baseline_all, new_indexes_fast_tol
 from tms_dashboard.nicegui_app.styles import change_color, change_icon, change_label, get_status, change_button 
 
 class UpdateDashboard:
@@ -12,8 +12,9 @@ class UpdateDashboard:
         self.update_dashboard_colors()
         self.update_indicators()
         self.update_displacement_plot()
-        self.update_mep_plot()
         self.update_buttons()
+        if self.dashboard.status_new_mep:
+            self.update_mep_plot()
 
     def update_dashboard_colors(self):
         """Update all dashboard label colors based on state.
@@ -99,30 +100,17 @@ class UpdateDashboard:
         Args:
             dashboard: DashboardState instance
         """
-        mep_history = list(self.emg_connection.get_triggered_window())
-        if np.array_equal(mep_history, self.dashboard.mep_history):
-            return
-        
-        if len(mep_history) == 0:
-            return
 
         dashboard = self.dashboard
-        mep_sampling_rate = dashboard.mep_sampling_rate = self.emg_connection.get_sampling_rate()
         
         # Aplicar baseline entre 5-20ms
-        t_min_ms = self.emg_connection.t_min * 1000
-        t_max_ms = self.emg_connection.t_max * 1000
-        
-        mep_history = set_apply_baseline_all(
-            baseline_start_ms=5,      # Início do baseline em 5ms
-            baseline_end_ms=20,        # Fim do baseline em 20ms
-            signal_start_ms=t_min_ms,  # Sinal começa em -10ms
-            signal_end_ms=t_max_ms,    # Sinal termina em 40ms
-            data_windows=mep_history[-num_windows:], 
-            sampling_rate=mep_sampling_rate
-        )
+        t_min_ms = self.emg_connection.t_min
+        t_max_ms = self.emg_connection.t_max
 
         dashboard.mep_history = mep_history
+        
+        mep_history = dashboard.mep_history_baseline[-num_windows:]
+
         ax = dashboard.mep_ax
         ax.clear()
 
