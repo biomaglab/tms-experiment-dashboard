@@ -99,7 +99,7 @@ def index():
     ''')
     
     # Build UI using shared dashboard instance
-    create_header(dashboard)
+    create_header(dashboard, message_emit)
     create_dashboard_tabs(dashboard, message_emit)
 
 

@@ -38,3 +38,18 @@ class Message2Server():
         
         self.dashboard.status_new_mep = False
         return self.__send_message2navigation(topic="Set brain targets", data={'brain_targets': targets})
+    
+    def send_robot_config(self, robot_config):
+        """Send robot configuration to the robot control system.
+        
+        Args:
+            robot_config: RobotConfigState instance with configuration parameters
+            
+        Returns:
+            bool: True if message was sent successfully
+        """
+        return self.__send_message2robot(
+            topic='Dashboard to Robot: Update configuration', 
+            data=robot_config.to_dict()
+        )
+
