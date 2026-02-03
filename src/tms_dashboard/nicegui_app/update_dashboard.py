@@ -145,5 +145,7 @@ class UpdateDashboard:
     def update_buttons(self):
         dashboard = self.dashboard
         """Update all dashboard buttons."""
-        status = get_status(dashboard.navigation_button_pressed)
-        change_button(dashboard, "navigation_button", status)
+        change_button(dashboard, "navigation_button", get_status(dashboard.navigation_button_pressed))
+        change_button(dashboard, "upward_robot_button", get_status(dashboard.move_upward_robot_pressed), ("#5898d46c", "#ffffff00"))
+        change_button(dashboard, "active_robot_button", get_status(dashboard.active_robot_pressed), ("#5898d46c", "#ffffff00"))  
+        change_button(dashboard, "free_drive_button", get_status(dashboard.free_drive_robot_pressed), ("#5898d46c", "#ffffff00")) 

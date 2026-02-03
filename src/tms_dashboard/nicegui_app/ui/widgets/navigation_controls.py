@@ -55,9 +55,9 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
             success = message_emit.free_drive_robot()
 
             if success:
-                ui.notify('Create target sent', position='top')
+                ui.notify('Free drive activated', position='top')
             else:
-                ui.notify('Failed to send Create marker', position='top')
+                ui.notify('Failed to activate free drive', position='top')
         
         button = ui.button('Free Drive Robot', icon='gesture', on_click=_free_drive_click).props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
@@ -89,9 +89,9 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
             success = message_emit.move_upward_robot()
 
             if success:
-                ui.notify('Create target sent', position='top')
+                ui.notify('Moving robot upward', position='top')
             else:
-                ui.notify('Failed to send Create marker', position='top')
+                ui.notify('Failed to move robot upward', position='top')
 
         button = ui.button('Move Upward Robot', icon='arrow_upward', on_click=_upward_click).props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
