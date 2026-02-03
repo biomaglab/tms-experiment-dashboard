@@ -21,7 +21,7 @@ def create_status_widgets(dashboard: DashboardState):
     """
     # Status section - 2x2 grid (horizontal layout)
     with ui.column().style('margin-bottom: 5px;'):
-        ui.label('Connection').style('font-size: 1.3rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
+        ui.label('Connection').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
         
         with ui.row().style('gap: 2.5rem; flex: 1; align-items: center;'):
             with ui.row().style('gap: 5px;'):
@@ -49,7 +49,7 @@ def create_status_widgets(dashboard: DashboardState):
     
     # Markers section - horizontal row
     with ui.column().style('margin-bottom: 5px;'):
-        ui.label('Markers').style('font-size: 1.3rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
+        ui.label('Markers').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
         
         with ui.row().style('gap: 2.5rem; width: 100%;'):
             for label_text, icon in [
@@ -58,8 +58,8 @@ def create_status_widgets(dashboard: DashboardState):
                 ('Probe', 'sensors'),
             ]:
                 with ui.row().style('gap: 4px;'):
-                    ui.icon(icon).style('font-size: 22px; color: #9ca3af;')
-                    label = ui.label(label_text).style('font-size: 1.0rem; color: #9ca3af;')
+                    icon = ui.icon(icon).style('font-size: 22px; color: #9ca3af;')
+                    label = ui.label(label_text).style('font-size: 1.1rem; color: #9ca3af;')
                     dashboard.__dict__[f'icon_marker_{label_text.lower()}'] = icon
                     dashboard.__dict__[f'label_marker_{label_text.lower()}'] = label
     
@@ -67,12 +67,12 @@ def create_status_widgets(dashboard: DashboardState):
     
     # Fiducials section - side by side (Image | Tracker)
     with ui.column().style('margin-bottom: 5px;'):
-        ui.label('Fiducials').style('font-size: 1.3rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
+        ui.label('Fiducials').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
         
         with ui.row().style('gap: 2.5rem;'):
             # Image fiducials (left column)
             with ui.column().style('gap: 1px;'):
-                ui.label('Image').style('font-size: 1.2rem; color: #6B6B6B; margin-bottom: 1px;')
+                ui.label('Image').style('font-size: 1.3rem; color: #6B6B6B; margin-bottom: 1px;')
                 for label_text, icon_name in [
                     ('L Fid', 'radio_button_unchecked'),
                     ('Nasion', 'radio_button_unchecked'),
@@ -86,7 +86,7 @@ def create_status_widgets(dashboard: DashboardState):
             
             # Tracker fiducials (right column)
             with ui.column().style('gap: 1px;'):
-                ui.label('Tracker').style('font-size: 1.2rem; color: #6B6B6B; margin-bottom: 1px;')
+                ui.label('Tracker').style('font-size: 1.3rem; color: #6B6B6B; margin-bottom: 1px;')
                 for label_text, icon_name in [
                     ('L Tragus', 'radio_button_unchecked'),
                     ('Nose', 'radio_button_unchecked'),
@@ -102,7 +102,7 @@ def create_status_widgets(dashboard: DashboardState):
     
     # Robot section - 2x2 grid
     with ui.column().style('gap: 1px;'):
-        ui.label('Status').style('font-size: 1.3rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
+        ui.label('Status').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
         
         with ui.row().style('gap: 2.5rem; margin-bottom: 2px; width: 100%;'):
             with ui.row().style('gap: 3px;'):
@@ -133,17 +133,17 @@ def create_status_widgets(dashboard: DashboardState):
     
     # Indicators section - Distance, Angle, Force
     with ui.column().style('gap: 1px;'):
-        ui.label('Indicators').style('font-size: 1.3rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
+        ui.label('Indicators').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
         with ui.row().style('gap: 2rem;'):
             # Distance
             with ui.row().style('gap: 2px; align-items: center;'):
-                ui.label('Distance:').style('font-size: 0.85rem; color: #6B6B6B; font-weight: 600;')
+                ui.label('Distance:').style('font-size: 0.9rem; color: #6B6B6B; font-weight: 600;')
                 label = ui.label('0.0 mm').style('font-size: 1.1rem; color: #3b82f6; font-weight: 500;')
                 dashboard.__dict__['label_distance'] = label
                        
             # Force Sensor
             with ui.row().style('gap: 2px; align-items: center;'):
-                ui.label('Force Sensor:').style('font-size: 0.85rem; color: #6B6B6B; font-weight: 600;')
+                ui.label('Force Sensor:').style('font-size: 0.9rem; color: #6B6B6B; font-weight: 600;')
                 label = ui.label('0.0 N').style('font-size: 1.1rem; color: #10b981; font-weight: 500;')
                 dashboard.__dict__['label_force'] = label
     
