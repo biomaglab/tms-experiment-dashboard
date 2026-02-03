@@ -13,7 +13,7 @@ from .widgets import (
 )
 
 
-def create_dashboard_tabs(dashboard: DashboardState):
+def create_dashboard_tabs(dashboard: DashboardState, message_emit):
     """Create 2x2 grid dashboard layout.
     
     Layout (no scrolling):
@@ -94,4 +94,4 @@ def create_dashboard_tabs(dashboard: DashboardState):
                 'background-color: #f9fafb;'
                 'gap: 1.5rem;'
             ):
-                create_navigation_controls(dashboard)
+                create_navigation_controls(dashboard, message_emit)
