@@ -33,7 +33,7 @@ class Message2Server():
         for mep in series_meps:
             mep_value = p2p_from_time(mep, self.dashboard.mep_sampling_rate, -10)
             target = BrainTargetModel()
-            target.mep = mep_value
+            target.mep = round(mep_value, 2)
             targets.append(target.to_dict())
         
         self.dashboard.status_new_mep = False

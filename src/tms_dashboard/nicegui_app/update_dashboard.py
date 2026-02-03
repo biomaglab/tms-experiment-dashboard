@@ -103,8 +103,8 @@ class UpdateDashboard:
         dashboard = self.dashboard
         
         # Aplicar baseline entre 5-20ms
-        t_min_ms = self.emg_connection.t_min
-        t_max_ms = self.emg_connection.t_max
+        t_min_ms = self.emg_connection.t_min * 1000
+        t_max_ms = self.emg_connection.t_max * 1000
         
         mep_history = dashboard.mep_history_baseline[-num_windows:]
 

@@ -22,7 +22,7 @@ from tms_dashboard.nicegui_app.ui import create_header, create_dashboard_tabs
 dashboard = DashboardState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
 message_handler = MessageHandler(socket_client, dashboard)
-neuroone_connection = neuroOne(num_trial=20, t_min=-10, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
+neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
 update_dashboard = UpdateDashboard(dashboard, neuroone_connection)
 message_emit = Message2Server(socket_client, dashboard)
 
@@ -47,7 +47,6 @@ def start_background_services():
         while True:
             try:
                 time.sleep(0.1)
-                update_dashboard.update()
                 message_handler.process_messages()
 
                 if neuroone_connection.get_connection() and neuroone_connection.get_status():
@@ -57,12 +56,15 @@ def start_background_services():
                                                 neuroone_connection.t_min,
                                                 neuroone_connection.t_max,
                                                 dashboard.mep_sampling_rate)
-                    if dashboard.status_new_mep:
-                        new_meps_only = [dashboard.mep_history_baseline[i] for i in dashboard.new_meps_index]
-                        message_emit.send_mep_value(new_meps_only)
                 else:
                     if dashboard.get_all_state_mep():
                         dashboard.reset_all_state_mep()
+                
+                update_dashboard.update()
+                if dashboard.status_new_mep:
+                    new_meps_only = [dashboard.mep_history_baseline[i] for i in dashboard.new_meps_index]
+                    message_emit.send_mep_value(new_meps_only)
+
                     
             except Exception as e:
                 print("Error processing messages", e)
