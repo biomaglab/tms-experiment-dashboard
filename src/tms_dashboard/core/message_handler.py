@@ -57,9 +57,7 @@ class MessageHandler:
                 self._handle_image_fiducial(data)
             
             case 'Reset image fiducials':
-                self.dashboard.image_NA_set = False
-                self.dashboard.image_RE_set = False
-                self.dashboard.image_LE_set = False
+                self.dashboard.image_fiducials = False
             
             case 'Project loaded successfully':
                 self.dashboard.project_set = True
@@ -87,14 +85,10 @@ class MessageHandler:
                 self._handle_displacement(data)
             
             case 'Tracker fiducials set':
-                self.dashboard.tracker_LE_set = True
-                self.dashboard.tracker_RE_set = True
-                self.dashboard.tracker_NA_set = True
+                self.dashboard.tracker_fiducials = True
             
             case 'Reset tracker fiducials':
-                self.dashboard.tracker_NA_set = False
-                self.dashboard.tracker_RE_set = False
-                self.dashboard.tracker_LE_set = False
+                self.dashboard.tracker_fiducials = False
             
             case "Robot to Neuronavigation: Robot connection status":
                 self.dashboard.robot_set = True if data['data'] == 'Connected' else False
@@ -175,14 +169,20 @@ class MessageHandler:
                     self.dashboard.image_RE_set = False
                 case 'LE':
                     self.dashboard.image_LE_set = False
+            self.dashboard.image_fiducials= False
         else:
             match data['fiducial_name']:
                 case 'NA':
+                    print("Sim")
                     self.dashboard.image_NA_set = True
                 case 'RE':
                     self.dashboard.image_RE_set = True
                 case 'LE':
                     self.dashboard.image_LE_set = True
+            
+            if self.dashboard.image_NA_set and self.dashboard.image_RE_set and self.dashboard.image_LE_set:
+                print("Simm")
+                self.dashboard.image_fiducials= True
     
     def _handle_tracker_poses(self, data):
         """Handle tracker pose updates."""

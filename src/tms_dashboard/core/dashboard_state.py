@@ -34,20 +34,19 @@ class DashboardState:
         self.robot_set = False
         
         # Image fiducials (set in software)
-        self.image_NA_set = False  # Nasion
-        self.image_RE_set = False  # Right ear
-        self.image_LE_set = False  # Left ear
+        self.image_fiducials = False
+        self.image_NA_set = False
+        self.image_RE_set = False
+        self.image_LE_set = False
         
         # Tracker fiducials (real world landmarks)
-        self.tracker_NA_set = False  # Nose
-        self.tracker_RE_set = False  # Right tragus
-        self.tracker_LE_set = False  # Left tragus
+        self.tracker_fiducials = False
 
         # Makers Visibilities
         self.probe_visible = False
         self.head_visible = False
         self.coil_visible = False
-        
+
         # Robot and navigation status
         self.matrix_set = False
         self.target_set = False

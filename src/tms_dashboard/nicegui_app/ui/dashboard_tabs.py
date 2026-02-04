@@ -10,7 +10,7 @@ from .widgets import (
     create_mep_panel,
     create_navigation_controls,
     create_3d_scene_with_models,
-
+    new_status_widgets,
 )
 
 
@@ -56,7 +56,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
             
             # Status Items (40% width)
             with ui.card().props('flat').style(
-                'flex: 30; '
+                'flex: 37; '
                 'padding: 8px; '
                 'overflow: auto; '
                 'height: 100%; '
@@ -64,10 +64,10 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'display: flex; '
                 'flex-direction: column;'
             ):
-                create_status_widgets(dashboard)
+                new_status_widgets(dashboard)
             # Status Items (40% width)
             with ui.card().props('flat').style(
-                'flex: 25; '
+                'flex: 18; '
                 'padding: 8px; '
                 'overflow: hidden; '
                 'height: 100%; '

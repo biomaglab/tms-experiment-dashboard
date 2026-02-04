@@ -34,30 +34,24 @@ class UpdateDashboard:
         change_color(dashboard, "marker_head", get_status(dashboard.head_visible))
         change_color(dashboard, "marker_coil", get_status(dashboard.coil_visible))
 
-        change_color(dashboard, "nasion", get_status(dashboard.image_NA_set))
-        change_icon(dashboard, "nasion", get_status(dashboard.image_NA_set))
-        change_color(dashboard, "r_fid", get_status(dashboard.image_RE_set))
-        change_icon(dashboard, "r_fid", get_status(dashboard.image_RE_set))
-        change_color(dashboard, "l_fid", get_status(dashboard.image_LE_set))
-        change_icon(dashboard, "l_fid", get_status(dashboard.image_LE_set))
-        change_color(dashboard, "nose", get_status(dashboard.tracker_NA_set))
-        change_icon(dashboard, "nose", get_status(dashboard.tracker_NA_set))
-        change_color(dashboard, "l_tragus", get_status(dashboard.tracker_LE_set))
-        change_icon(dashboard, "l_tragus", get_status(dashboard.tracker_LE_set))
-        change_color(dashboard, "r_tragus", get_status(dashboard.tracker_RE_set))
-        change_icon(dashboard, "r_tragus", get_status(dashboard.tracker_RE_set))
+        status = get_status(dashboard.image_fiducials)
+        change_color(dashboard, "image_fiducials", status)
+        change_icon(dashboard, "image_fiducials", status)
+
+        status = get_status(dashboard.tracker_fiducials)
+        change_color(dashboard, "tracker_fiducials", status)
+        change_icon(dashboard, "tracker_fiducials", status)
 
         change_color(dashboard, "target", get_status(dashboard.target_set))
         change_color(dashboard, "moving", get_status(dashboard.robot_moving))
         change_color(dashboard, "coil", get_status(dashboard.at_target))
-        # change_color(dashboard, "trials", get_status(dashboard.trials_started))
 
 
     def update_indicators(self):
         """Update all dashboard indicators."""
         dashboard = self.dashboard
         change_label(dashboard, "distance", str(round(dashboard.module_displacement, 2)) + " mm")
-        change_label(dashboard, "force", str(round(dashboard.force, 2)) + " N")
+        # change_label(dashboard, "force", str(round(dashboard.force, 2)) + " N")
 
     def update_displacement_plot(self):
         """Update displacement plot with current history data.
