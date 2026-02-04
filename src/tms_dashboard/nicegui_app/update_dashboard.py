@@ -26,9 +26,9 @@ class UpdateDashboard:
         """
         dashboard = self.dashboard
         
-        change_color(dashboard, "project", get_status(dashboard.project_set))
         change_color(dashboard, "camera", get_status(dashboard.camera_set))
         change_color(dashboard, "robot", get_status(dashboard.robot_set))
+        change_color(dashboard, "emg", get_status(self.emg_connection.get_connection()))
 
         change_icon(dashboard, "probe", f"{IMAGES_DIR}\icones\stylus_icon_green.png" if dashboard.probe_visible else f"{IMAGES_DIR}\icones\stylus_icon.png")
         change_icon(dashboard, "head", f"{IMAGES_DIR}\icones\head_icon_green.png" if dashboard.head_visible else f"{IMAGES_DIR}\icones\head_icon.png")

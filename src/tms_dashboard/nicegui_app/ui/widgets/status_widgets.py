@@ -37,8 +37,8 @@ def create_status_widgets(dashboard: DashboardState):
                     with ui.row().style('gap: 5px;'):
                         icon = ui.icon('computer').style('font-size: 22px; color: #9ca3af;')
                         label = ui.label('EMG').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
-                        dashboard.__dict__['icon_project'] = icon
-                        dashboard.__dict__['label_project'] = label
+                        dashboard.__dict__['icon_emg'] = icon
+                        dashboard.__dict__['label_emg'] = label
                     with ui.row().style('gap: 5px;'):
                         icon = ui.icon('precision_manufacturing').style('font-size: 22px; color: #9ca3af;')
                         label = ui.label('Robot').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
