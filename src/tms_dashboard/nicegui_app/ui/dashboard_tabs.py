@@ -26,14 +26,14 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
     """
     # Main container - 2 rows
     with ui.column().classes('w-full').style(
-        'height: calc(100vh - 110px); '
+        'height: calc(100vh - 77px); '
         'overflow: hidden; '
         'gap: 0;'
     ):
         
         # ===== ROW 1 (50% height): MEP Graph + Status Items + Controls =====
         with ui.row().classes('w-full').style(
-            'flex: 50; '
+            'flex: 55; '
             'min-height: 0; '
             'align-items: stretch; '
             'gap: 0;'
@@ -41,7 +41,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
             # 3D Navigation (60% width)
             with ui.card().props('flat').style(
                 'flex: 45; '
-                'padding: 12px; '
+                'padding: 8px; '
                 'display: flex; '
                 'flex-direction: column; '
                 'overflow: hidden; '
@@ -79,7 +79,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
         
         # ===== ROW 2 (50% height): Time Series Graphs + 3D Scene =====
         with ui.row().classes('w-full').style(
-            'flex: 50; '
+            'flex: 45; '
             'min-height: 0; '
             'align-items: stretch; '
             'gap: 0;'
@@ -87,7 +87,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
             # Time Series Graph (60% width)
             with ui.card().props('flat').style(
                 'flex: 65; '
-                'padding: 12px; '
+                'padding: 8px; '
                 'display: flex; '
                 'flex-direction: row; '
                 'overflow: hidden; '
@@ -99,7 +99,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
             # Navigation Controls (40% width)
             with ui.card().props('flat').style(
                 'flex: 35; '
-                'padding: 12px 12px 12px 0px; '
+                'padding: 8px 12px 8px 0px; '
                 'display: flex; '
                 'flex-direction: row; '
                 'overflow: hidden; '

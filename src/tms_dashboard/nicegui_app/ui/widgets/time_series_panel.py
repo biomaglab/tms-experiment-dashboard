@@ -11,7 +11,7 @@ def create_mep_panel(dashboard: DashboardState):
     """Create MEP panel using Plotly with distinct styling."""
     with ui.column().style('flex: 1; width: 100%; height: 100%; min-width: 0; display: flex; flex-direction: column;'):
         ui.label('Motor Evoked Potentials').style(
-            'font-size: 1rem; font-weight: 600; margin-bottom: 4px; color: #1f2937;'
+            'font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: #4b5563;'
         )
         
         # Container for Plotly

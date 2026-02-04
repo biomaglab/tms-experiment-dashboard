@@ -92,6 +92,7 @@ def index():
         <style>
             :root {
                 --nicegui-default-gap: 0;
+                --nicegui-default-padding: 0.5rem;
             }
             body {
                 margin: 0 !important;

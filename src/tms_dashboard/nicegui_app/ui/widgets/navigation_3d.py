@@ -36,9 +36,9 @@ def create_3d_scene_with_models(dashboard: DashboardState):
 
     SCALE = 0.012
 
-    # Full height scene - fills parent container
-    with ui.column().style('flex: 1; height: 100%; min-width: 0;'):
-        ui.label('Navigation').style('font-size: 1rem; font-weight: 600; margin-bottom: 4px;')
+    # Full height scene - fills    # Create container for 3D scene
+    with ui.column().classes('w-full h-full').style('position: relative; overflow: hidden; display: flex; flex-direction: column; flex: 1;'):
+        ui.label('Navigation').style('font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; color: #4b5563;')
         with ui.column().style("width: 100%; height: calc(100% - 24px); border: 1px solid #e5e7eb; border-radius: 8px; background-color: white; overflow: hidden;"):
             with ui.row().style("width: calc(100% - 30px); height: calc(100% - 30px); margin: 15px;"):
                 with ui.scene().classes('w-full h-full') as scene:

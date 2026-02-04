@@ -19,7 +19,7 @@ def create_header(dashboard: DashboardState):
     # Header row
     with ui.row().classes('w-full items-center justify-between').style(
         'background-color: #ffffff;'
-        'padding: 16px 32px;'
+        'padding: 10px 32px;'
         'border-bottom: 1px solid #e5e7eb;'
         'box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);'
     ):
