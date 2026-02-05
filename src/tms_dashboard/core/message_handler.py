@@ -83,6 +83,9 @@ class MessageHandler:
                 
             case 'Neuronavigation to Robot: Update displacement to target':
                 self._handle_displacement(data)
+
+                self.dashboard.navigation_button_pressed = True
+                self.dashboard.target_set = True
             
             case 'Tracker fiducials set':
                 self.dashboard.tracker_fiducials = True
