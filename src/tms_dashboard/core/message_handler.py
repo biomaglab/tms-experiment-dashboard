@@ -5,15 +5,14 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from typing import Optional
-from .dashboard_state import DashboardState
-from .modules.socket_client import SocketClient
-from tms_dashboard.utils.constants import robot_messages
-
+from src.tms_dashboard.core.dashboard_state import DashboardState
+from src.tms_dashboard.core.modules.socket_client import SocketClient
+from src.tms_dashboard.core.message_emit import Message2Server
 
 class MessageHandler:
     """Processes messages from socket client and updates dashboard state."""
     
-    def __init__(self, socket_client: SocketClient, dashboard_state: DashboardState):
+    def __init__(self, socket_client: SocketClient, dashboard_state: DashboardState, message_emit: Message2Server):
         """Initialize message handler.
         
         Args:
@@ -22,6 +21,7 @@ class MessageHandler:
         """
         self.socket_client = socket_client
         self.dashboard = dashboard_state
+        self.message_emit = message_emit
         self.target_status = None
         self.distance_0 = 0
         self.distance_x = 0
@@ -52,14 +52,13 @@ class MessageHandler:
             topic: Message topic string
             data: Message data payload
         """
+
         match topic:
             case 'Set image fiducial':
                 self._handle_image_fiducial(data)
             
             case 'Reset image fiducials':
-                self.dashboard.image_NA_set = False
-                self.dashboard.image_RE_set = False
-                self.dashboard.image_LE_set = False
+                self.dashboard.image_fiducials = False
             
             case 'Project loaded successfully':
                 self.dashboard.project_set = True
@@ -75,7 +74,7 @@ class MessageHandler:
 
                     self.dashboard.probe_visible = data['visibilities'][0]
                     self.dashboard.head_visible = data['visibilities'][1]
-                    self.dashboard.coil_visible = all(data['visibilities'][2:])
+                    self.dashboard.coil_visible = data['visibilities'][2]
 
                 else:
                     self.dashboard.camera_set = False
@@ -85,16 +84,17 @@ class MessageHandler:
                 
             case 'Neuronavigation to Robot: Update displacement to target':
                 self._handle_displacement(data)
+
+                self.dashboard.navigation_button_pressed = True
+                self.dashboard.target_set = True
+                self.dashboard.image_fiducials = True
+                self.dashboard.tracker_fiducials = True
             
             case 'Tracker fiducials set':
-                self.dashboard.tracker_LE_set = True
-                self.dashboard.tracker_RE_set = True
-                self.dashboard.tracker_NA_set = True
+                self.dashboard.tracker_fiducials = True
             
             case 'Reset tracker fiducials':
-                self.dashboard.tracker_NA_set = False
-                self.dashboard.tracker_RE_set = False
-                self.dashboard.tracker_LE_set = False
+                self.dashboard.tracker_fiducials = False
             
             case "Robot to Neuronavigation: Robot connection status":
                 self.dashboard.robot_set = True if data['data'] == 'Connected' else False
@@ -131,6 +131,9 @@ class MessageHandler:
 
             case "Robot to Neuronavigation: Set objective":
                 self.dashboard.robot_moving = False if data["objective"] == 0 else True
+
+                if not self.dashboard.robot_set and self.dashboard.robot_moving:
+                    self.message_emit.check_robot_connection()
             
             case 'Coil at target':
                 if data['state'] == True:
@@ -140,7 +143,30 @@ class MessageHandler:
 
             case "Press navigation button":
                 self.dashboard.navigation_button_pressed = data["cond"]
+            
+            case "Robot to Neuronavigation: Send force sensor data":
+                self.dashboard.force = data["force_feedback"]
+                if not self.dashboard.robot_set:
+                    self.message_emit.check_robot_connection()
     
+            case "Start navigation":
+                self.dashboard.navigation_button_pressed = True
+
+            case "Stop navigation":
+                self.dashboard.navigation_button_pressed = False
+
+            case "Neuronavigation to Robot: Set free drive":
+                pressed = data["set"]
+                self.dashboard.free_drive_robot_pressed = pressed
+            
+            case 'Press move away button':
+                pressed = data['pressed']
+                self.dashboard.move_upward_robot_pressed = pressed
+
+            case "Press robot button":
+                pressed = data['pressed']
+                self.dashboard.active_robot_pressed = pressed
+
     def _handle_image_fiducial(self, data):
         """Handle image fiducial setting/unsetting."""
         if data == "":
@@ -154,14 +180,19 @@ class MessageHandler:
                     self.dashboard.image_RE_set = False
                 case 'LE':
                     self.dashboard.image_LE_set = False
+            self.dashboard.image_fiducials= False
         else:
             match data['fiducial_name']:
                 case 'NA':
+                    print("Sim")
                     self.dashboard.image_NA_set = True
                 case 'RE':
                     self.dashboard.image_RE_set = True
                 case 'LE':
                     self.dashboard.image_LE_set = True
+            
+            if self.dashboard.image_NA_set and self.dashboard.image_RE_set and self.dashboard.image_LE_set:
+                self.dashboard.image_fiducials= True
     
     def _handle_tracker_poses(self, data):
         """Handle tracker pose updates."""
@@ -183,7 +214,7 @@ class MessageHandler:
     def _handle_displacement(self, data):
         """Handle displacement to target update."""
         self.dashboard.displacement = list(map(lambda x: data['displacement'][x], range(6)))
-        self.dashboard.module_displacement = np.linalg.norm(self.dashboard.displacement[:3])
+        self.dashboard.module_displacement = round(np.linalg.norm(self.dashboard.displacement[:3]),2)
 
         # Update displacement history for plotting
         self.dashboard.add_displacement_sample()

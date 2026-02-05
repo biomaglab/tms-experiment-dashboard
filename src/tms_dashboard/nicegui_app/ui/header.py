@@ -6,6 +6,8 @@ from nicegui import ui
 from tms_dashboard.config import IMAGES_DIR, CSV_PATH
 from tms_dashboard.core.dashboard_state import DashboardState
 from tms_dashboard.core.data_logger import DataLogger
+from tms_dashboard.nicegui_app.ui.experiment_form import create_experiment_form
+from tms_dashboard.nicegui_app.ui.checklist_tab import create_checklist_tab
 
 
 def create_header(dashboard: DashboardState):
@@ -13,13 +15,12 @@ def create_header(dashboard: DashboardState):
     
     Args:
         dashboard: DashboardState instance
+        ui_state: DashboardUI instance (optional, for consistency)
     """
-    logger = DataLogger(CSV_PATH)
-    
     # Header row
     with ui.row().classes('w-full items-center justify-between').style(
         'background-color: #ffffff;'
-        'padding: 16px 32px;'
+        'padding: 10px 32px;'
         'border-bottom: 1px solid #e5e7eb;'
         'box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);'
     ):
@@ -33,59 +34,32 @@ def create_header(dashboard: DashboardState):
                 'letter-spacing: -0.025em;'
             )
         
-        # Right side: Config button
-        async def open_config():
-            """Open configuration dialog."""
-            with ui.dialog().props('persistent') as dialog:
-                with ui.card().style('min-width: 600px; max-width: 800px;'):
+        # Right side: Experiment Description button and Checklist button (grouped)
+        with ui.row().classes('items-center gap-2'):
+            # Experiment Description opens the experiment form dialog (renamed from 'Configure Experiment')
+            exp_btn = create_experiment_form(dashboard, button_label='Experiment Description', header_mode=True)
+            exp_btn.style('min-height: 40px; padding: 6px 14px; display: inline-flex; align-items: center;')
+
+            # Checklist button: opens the checklist in a modal dialog (reuses create_checklist_tab)
+            def show_checklist_dialog():
+                with ui.dialog() as dialog, ui.card().style('min-width: 480px; max-width: 900px; max-height: 85vh;'):
                     # Dialog header
                     with ui.row().classes('w-full items-center justify-between mb-4'):
-                        ui.label('Experiment Configuration').style(
+                        ui.label('Experiment Checklist').style(
                             'font-size: 1.25rem; font-weight: 600; color: #111827;'
                         )
                         ui.button(icon='close', on_click=dialog.close).props('flat round dense')
-                    
+
                     ui.separator()
-                    
-                    # Form fields in a grid
-                    with ui.grid(columns=2).classes('w-full gap-4 mt-4'):
-                        # Left column
-                        with ui.column().classes('gap-3'):
-                            ui.label('Basic Information').style('font-weight: 600; font-size: 0.9375rem;')
-                            name_input = ui.input('Experiment Name', value=dashboard.experiment_name).classes('w-full').props('outlined dense')
-                            desc_input = ui.textarea('Description', value=dashboard.experiment_description).classes('w-full').props('outlined dense rows=3')
-                        
-                        # Right column  
-                        with ui.column().classes('gap-3'):
-                            ui.label('Timeline').style('font-weight: 600; font-size: 0.9375rem;')
-                            start_input = ui.input('Start Date', value=dashboard.start_date).classes('w-full').props('outlined dense type=date')
-                            end_input = ui.input('End Date', value=dashboard.end_date).classes('w-full').props('outlined dense type=date')
-                    
-                    # Details (full width)
-                    details_input = ui.textarea('Details', value=dashboard.experiment_details).classes('w-full mt-3').props('outlined dense rows=3')
-                    
-                    def save_data():
-                        """Save experiment data to CSV."""
-                        data = DataLogger.create_experiment_dict(
-                            experiment_name=name_input.value,
-                            experiment_description=desc_input.value,
-                            start_date=start_input.value,
-                            end_date=end_input.value,
-                            experiment_details=details_input.value
-                        )
-                        if logger.save_experiment_data(data):
-                            ui.notify('Data saved successfully', type='positive', position='top')
-                            dialog.close()
-                        else:
-                            ui.notify('Error saving data', type='negative', position='top')
-                    
-                    # Action buttons
+
+                    with ui.column().classes('w-full'):
+                        create_checklist_tab(dashboard)
+
+                    # Footer actions
                     with ui.row().classes('w-full justify-end gap-2 mt-4'):
-                        ui.button('Cancel', on_click=dialog.close).props('outline')
-                        ui.button('Save', on_click=save_data, icon='save').props('color=primary')
-            
-            await dialog
-        
-        ui.button('Configure Experiment', on_click=open_config, icon='settings').props('flat').style(
-            'font-weight: 500; color: #6b7280;'
-        )
+                        ui.button('Close', on_click=dialog.close).props('outline')
+
+                dialog.open()
+
+            checklist_btn = ui.button('Checklist', on_click=show_checklist_dialog, icon='checklist').props('flat')
+            checklist_btn.style('min-height: 40px; padding: 6px 12px; display: inline-flex; align-items: center; margin-left: 8px;')

@@ -80,52 +80,92 @@ def section_title_style() -> str:
     )
 
 
-def change_color(dashboard, target_label: str, new_status: str, colors: tuple = None):
+def change_color(ui_state, target_label: str, new_status: str, colors: tuple = None):
     """Change the color of a label and its associated icon.
-    
-    Apenas duas cores são usadas:
-    - 'success': Verde (#10b981) - Estado ativo/conectado
-    - 'neutral': Cinza (#9ca3af) - Estado inativo/desconectado
-    
+
+    Supports labels/icons (original behavior) and the navigation button.
+
     Args:
-        dashboard: DashboardState instance containing label and icon references
-        target_label: Name of the label to update (will be converted to lowercase)
+        ui_state: DashboardUI instance containing label and icon references
+        target_label: Name of the label/button to update
         new_status: Status - 'success' or 'neutral'
+        colors: Optional tuple (active_color, inactive_color) for buttons
     """
+
+    # Fallback: original label/icon logic
     if colors is None:
-        color = '#10b981' if new_status == 'success' else '#9ca3af'  # Verde ou Cinza
+        color = '#10b981' if new_status == 'success' else '#9ca3af'
     else:
         color = colors[0] if new_status == 'success' else colors[1]
-        
-    # Update label if exists in dashboard
+
+    # Update label if exists in ui_state
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, label_key):
-        label = getattr(dashboard, label_key)
-        label.style(f'font-size: 1.0rem; color: {color}; font-weight: 500;')
-        label.update()
-    
+    if hasattr(ui_state, label_key):
+        label = getattr(ui_state, label_key)
+        if label:
+            label.style(f'color: {color};')
+            label.update()
+
     # Update associated icon if exists
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, icon_key):
-        icon = getattr(dashboard, icon_key)
-        # icon.style(f'font-size: 22px; color: {color};')
-        # icon.update()
+    if hasattr(ui_state, icon_key):
+        icon = getattr(ui_state, icon_key)
+        if icon:
+            icon.style(f'color: {color};')
+            icon.update()
 
-def change_icon(dashboard, target_label: str, new_status: str):
-    """Change the icon of a label based on status."""
+def change_icon(ui_state, target_label: str, new_status: str):
+    """Change the icon of a label based on status (for Material Icons/Radio Buttons)."""
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, icon_key):
-        icon = getattr(dashboard, icon_key)
-        icon.name = 'radio_button_unchecked' if new_status == 'neutral' else 'radio_button_checked'
-        icon.update()
+    if hasattr(ui_state, icon_key):
+        icon = getattr(ui_state, icon_key)
+        if icon:
+            icon.name = 'radio_button_unchecked' if new_status == 'neutral' else 'radio_button_checked'
+            icon.update()
 
-def change_label(dashboard, target_label: str, new_text: str):
-    """Change the label of a label based on status."""
+def change_radio_icon(ui_state, target_label: str, new_status: str):
+    """Alias for change_icon (compatibility)."""
+    change_icon(ui_state, target_label, new_status)
+
+def change_label(ui_state, target_label: str, new_text: str):
+    """Change the label text."""
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, label_key):
-        label = getattr(dashboard, label_key)
-        label.text = new_text
-        label.update()
+    if hasattr(ui_state, label_key):
+        label = getattr(ui_state, label_key)
+        if label:
+            label.text = new_text
+            label.update()
 
 def get_status(condition: bool) -> str:
     return 'success' if condition else 'neutral'
+
+def change_button(ui_state, target_label: str, new_status: str, colors: tuple = None):
+    # Special handling for the START NAVIGATION button
+    if hasattr(ui_state, target_label):
+        if colors is None:
+            color = '#10b981' if new_status == 'success' else '#9ca3af'
+        else:
+            color = colors[0] if new_status == 'success' else colors[1]
+
+        button = getattr(ui_state, target_label)
+        # Fallback: inline style
+        if button:
+            button.style(f'background-color: {color} !important;')
+            button.update()
+
+def change_image(ui_state, target_label: str, icon_path):
+    """Change the source of a ui.image widget."""
+    image_key = f'image_{target_label.lower().replace(" ", "_")}'
+    if hasattr(ui_state, image_key):
+        image = getattr(ui_state, image_key)
+        if image and image.source != icon_path:
+            image.set_source(icon_path)
+            image.force_reload()
+
+def change_progress_ui(ui_state, target_label: str, value):
+    """Update value of a circular progress indicator."""
+    key = f'{target_label.lower().replace(" ", "_")}'
+    if hasattr(ui_state, key):
+        progress_ui = getattr(ui_state, key)
+        if progress_ui and progress_ui.value != value:
+            progress_ui.set_value(value)

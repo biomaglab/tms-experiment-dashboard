@@ -107,6 +107,24 @@ class SocketClient:
         self.__stop_event.set()
         if self.__thread and self.__thread.is_alive():
             self.__thread.join(timeout=5)
+
+    def emit_event(self, event: str, msg):
+        """Emit an event to the relay server if connected.
+
+        Args:
+            event: Socket.IO event name (e.g., 'from_robot')
+            msg: Any JSON-serializable payload
+        """
+        if self.__sio is None:
+            print(f"[SocketClient] Cannot emit, client not initialized (event={event})")
+            return False
+        try:
+            # emit is thread-safe in python-socketio
+            self.__sio.emit(event, msg)
+            return True
+        except Exception as e:
+            print(f"[SocketClient] Error emitting event '{event}': {e}")
+            return False
     
     def get_buffer(self) -> list:
         """Retorna todas as mensagens do buffer (não bloqueia).
