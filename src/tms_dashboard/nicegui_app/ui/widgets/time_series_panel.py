@@ -5,10 +5,15 @@
 from nicegui import ui
 import plotly.graph_objects as go
 from tms_dashboard.core.dashboard_state import DashboardState
+from tms_dashboard.nicegui_app.ui_state import DashboardUI
 
-
-def create_mep_panel(dashboard: DashboardState):
-    """Create MEP panel using Plotly with distinct styling."""
+def create_mep_panel(ui_state: DashboardUI):
+    """Create MEP panel using Plotly with distinct styling.
+    
+    Args:
+        dashboard: DashboardState instance
+        ui_state: DashboardUI instance (per-client UI state)
+    """
     with ui.column().style('flex: 1; width: 100%; height: 100%; min-width: 0; display: flex; flex-direction: column;'):
         ui.label('Motor Evoked Potentials').style(
             'font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: #4b5563;'
@@ -51,12 +56,18 @@ def create_mep_panel(dashboard: DashboardState):
                 dragmode=False
             )
             
-            dashboard.mep_plot = ui.plotly(fig_mep).classes('w-full h-full').props('config="{displayModeBar: false}"')
-            dashboard.mep_ax = None # No longer used
+            # Store reference in UI state
+            ui_state.mep_plot = ui.plotly(fig_mep).classes('w-full h-full').props('config="{displayModeBar: false}"')
+            ui_state.mep_ax = None # No longer used
 
 
-def create_time_series_panel(dashboard: DashboardState):
-    """Create time series graphs using Plotly."""
+def create_time_series_panel(ui_state: DashboardUI):
+    """Create time series graphs using Plotly.
+    
+    Args:
+        dashboard: DashboardState instance
+        ui_state: DashboardUI instance (per-client UI state)
+    """
     
     # Global CSS to hide Plotly toolbar safely
     ui.add_head_html('<style>.js-plotly-plot .plotly .modebar { display: none !important; }</style>')
@@ -91,7 +102,7 @@ def create_time_series_panel(dashboard: DashboardState):
                 )
                 
                 # Create Plotly element - hide toolbar
-                dashboard.displacement_plot = ui.plotly(fig_disp).classes('w-full h-full').props('config="{displayModeBar: false}"')
+                ui_state.displacement_plot = ui.plotly(fig_disp).classes('w-full h-full').props('config="{displayModeBar: false}"')
 
         # --- Graph 2: Rotation ---
         with ui.column().style('flex: 1; height: 100%; min-width: 0; display: flex; flex-direction: column;'):
@@ -121,4 +132,4 @@ def create_time_series_panel(dashboard: DashboardState):
                 )
                 
                 # Create Plotly element - hide toolbar
-                dashboard.rotation_plot = ui.plotly(fig_rot).classes('w-full h-full').props('config="{displayModeBar: false}"')
+                ui_state.rotation_plot = ui.plotly(fig_rot).classes('w-full h-full').props('config="{displayModeBar: false}"')

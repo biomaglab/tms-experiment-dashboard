@@ -13,7 +13,9 @@ from .widgets import (
 )
 
 
-def create_dashboard_tabs(dashboard: DashboardState, message_emit):
+from tms_dashboard.nicegui_app.ui_state import DashboardUI
+
+def create_dashboard_tabs(dashboard: DashboardState, message_emit, ui_state: DashboardUI):
     """Create 2x2 grid dashboard layout.
     
     Layout (no scrolling):
@@ -22,6 +24,8 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
     
     Args:
         dashboard: DashboardState instance
+        message_emit: Message emitter instance
+        ui_state: DashboardUI instance (per-client UI state)
     """
     # Main container - 2 rows
     with ui.column().classes('w-full').style(
@@ -47,7 +51,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'height: 100%; '
                 'background-color: #f9fafb;'
             ):
-                create_mep_panel(dashboard)
+                create_mep_panel(ui_state)
                 # ui.label('3D Navigation').style('font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;')
                 
                 # with ui.column().classes('w-full').style('flex: 1; min-height: 0;'):
@@ -63,7 +67,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'display: flex; '
                 'flex-direction: column;'
             ):
-                create_status_widgets(dashboard)
+                create_status_widgets(ui_state)
             # Status Items (40% width)
             with ui.card().props('flat').style(
                 'flex: 18; '
@@ -74,7 +78,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'display: flex; '
                 'flex-direction: column;'
             ):
-                create_navigation_controls(dashboard, message_emit)
+                create_navigation_controls(message_emit, ui_state)
         
         # ===== ROW 2 (50% height): Time Series Graphs + 3D Scene =====
         with ui.row().classes('w-full').style(
@@ -93,7 +97,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'height: 100%; '
                 'background-color: #f9fafb;'
             ):
-                create_time_series_panel(dashboard)
+                create_time_series_panel(ui_state)
             
             # Navigation Controls (40% width)
             with ui.card().props('flat').style(

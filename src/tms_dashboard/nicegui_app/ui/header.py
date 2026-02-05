@@ -8,11 +8,12 @@ from tms_dashboard.core.dashboard_state import DashboardState
 from tms_dashboard.core.data_logger import DataLogger
 
 
-def create_header(dashboard: DashboardState):
+def create_header(dashboard: DashboardState, ui_state=None):
     """Create clean minimal header with working experiment config dialog.
     
     Args:
         dashboard: DashboardState instance
+        ui_state: DashboardUI instance (optional, for consistency)
     """
     logger = DataLogger(CSV_PATH)
     

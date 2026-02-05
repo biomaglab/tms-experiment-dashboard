@@ -17,13 +17,16 @@ from tms_dashboard.core.message_handler import MessageHandler
 from tms_dashboard.core.message_emit import Message2Server
 from tms_dashboard.nicegui_app.update_dashboard import UpdateDashboard
 from tms_dashboard.nicegui_app.ui import create_header, create_dashboard_tabs
+from tms_dashboard.nicegui_app.client_manager import ClientManager
+from tms_dashboard.nicegui_app.ui_state import DashboardUI
 
 # Global shared instances (persist across all sessions)
 dashboard = DashboardState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
 message_handler = MessageHandler(socket_client, dashboard)
 neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
-update_dashboard = UpdateDashboard(dashboard, neuroone_connection)
+client_manager = ClientManager()
+update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manager)
 message_emit = Message2Server(socket_client, dashboard)
 
 # Flag to ensure background thread starts only once
@@ -101,9 +104,16 @@ def index():
         </style>
     ''')
     
-    # Build UI using shared dashboard instance
-    create_header(dashboard)
-    create_dashboard_tabs(dashboard, message_emit)
+    # Create per-session UI state
+    ui_state = DashboardUI()
+    client_manager.register(ui_state)
+    
+    # Register cleanup on disconnect
+    ui.context.client.on_disconnect(lambda: client_manager.unregister(ui_state))
+
+    # Build UI using shared dashboard instance and per-session UI state
+    create_header(dashboard, ui_state)
+    create_dashboard_tabs(dashboard, message_emit, ui_state)
 
 
 def main():

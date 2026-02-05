@@ -23,6 +23,7 @@ class neuroOne:
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.__sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.__sock.settimeout(0.1)  # Reduzido de 1.0s para melhor responsividade
+        self.__last_join_time = 0
 
         self.__connected = False
         self.__status_meansurament = False
@@ -66,22 +67,26 @@ class neuroOne:
             self.__thread.join()
 
     def __listen_loop(self):
+        self.__try_connect()
         while self.__running:
-            if not self.__connected:
-                self.__try_connect()
-                time.sleep(0.5)
+            try:
+                data, addr = self.__sock.recvfrom(BUFFER_SIZE)
+                if data:
+                    frame_type = data[0]
+                    if not self.__connected:
+                        self.__connected = True
+                        print("Connected to NeuroOne!")
+                        continue
+                    self.__process_pack(frame_type, data)
+                    self.__update_triggered_window()
+
+            except socket.timeout:
+                if not self.__status_meansurament:
+                    self.__try_connect()
                 continue
-            else:
-                try:
-                    data, addr = self.__sock.recvfrom(BUFFER_SIZE)
-                    if data:
-                        frame_type = data[0]
-                        self.__process_pack(frame_type, data)
-                        self.__update_triggered_window()
-                except socket.timeout:
-                    continue
-                except Exception as e:
-                    print(f"Erro na recepção: {e}")
+                
+            except Exception as e:
+                time.sleep(1)
             
     def get_connection(self):
         return self.__connected
@@ -90,15 +95,10 @@ class neuroOne:
         return self.__status_meansurament
     
     def __try_connect(self):
-        while not self.__connected:
+        current_time = time.time()
+        if current_time - self.__last_join_time > 1.0:
             self.__send_join_packet()
-            try:
-                data, addr = self.__sock.recvfrom(BUFFER_SIZE)
-                if not len(data) > 0:
-                    self.__connected = True
-                    print("Connected with NeuroOne")
-            except:
-                self.__connected = False
+            self.__last_join_time = current_time
 
     def __send_join_packet(self):
         """ Envia o pacote JOIN para destravar o streaming do hardware """
@@ -111,7 +111,6 @@ class neuroOne:
         
     def __process_pack(self, frame_type, data):
         if frame_type == FrameType.MEASUREMENT_START:
-            # Parse conforme StartPacketFieldIndex do C++
             self.__sampling_rate = struct.unpack('>I', data[4:8])[0]
             self.__num_channels = struct.unpack('>H', data[16:18])[0]
             self.__status_meansurament = True
@@ -140,12 +139,10 @@ class neuroOne:
 
         elif frame_type == FrameType.SAMPLES:
             if self.__num_channels == 0: return
-            # Parse conforme SamplesPacketFieldIndex do C++
             seq_no = struct.unpack('>I', data[4:8])[0]
             sample_idx = struct.unpack('>Q', data[12:20])[0]
             num_bundles = struct.unpack('>H', data[10:12])[0]
             
-            # Detectar perda de pacotes UDP
             with self.__lock:
                 if self.__last_seq_no is not None:
                     expected = (self.__last_seq_no + 1) % (2**32)
@@ -156,7 +153,6 @@ class neuroOne:
                 
                 self.__last_seq_no = seq_no
             
-            # As amostras começam no byte 28. Cada amostra tem 3 bytes (int24)
             offset = 28
             bytes_per_bundle = self.__num_channels * 3
             target_offset_in_bundle = self.__ch_index_in_bundle * 3
@@ -166,7 +162,6 @@ class neuroOne:
                     self.__first_sample_idx = sample_idx
                 
                 for b in range(num_bundles):
-                    # Pula direto para o byte do canal de interesse dentro do bundle
                     pos = offset + (b * bytes_per_bundle) + target_offset_in_bundle
                     sample_raw = data[pos : pos + 3]
                     val_uV = int24_to_int32(sample_raw) * self.__scale_factor
@@ -180,6 +175,8 @@ class neuroOne:
             self.__status_meansurament = False
             self.__num_channels = 0
             self.__sampling_rate = 0
+            self.__connected = False
+            print("Disconnected from NeuroOne")
         
         elif frame_type == FrameType.TRIGGER:
             num_triggers = struct.unpack('>H', data[2:4])[0]

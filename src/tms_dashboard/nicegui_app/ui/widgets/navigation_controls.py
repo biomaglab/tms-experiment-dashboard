@@ -6,7 +6,9 @@ from nicegui import ui
 from tms_dashboard.core.dashboard_state import DashboardState
 
 
-def create_navigation_controls(dashboard: DashboardState, message_emit):
+from tms_dashboard.nicegui_app.ui_state import DashboardUI
+
+def create_navigation_controls(message_emit, ui_state: DashboardUI):
     """Create navigation and robot control buttons.
     
     Contains two columns:
@@ -18,7 +20,7 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
     """
     # Navigation Controls column
     with ui.column().style('gap: 10px; flex: 1; height: 100%; gap: 10px; flex: 1; width: 100%;'):
-        ui.label('Navigation Controls').style('font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: #4b5563;')
+        ui.label('Navigation Controls').style('font-size: 1rem; font-weight: 600; margin-bottom: 8px;')
         
         # Main control button - Start/Stop (highlighted)
         nav_button = ui.button('NAVIGATION STATUS', icon='play_arrow').props('color=positive size=lg').classes('w-full').style(
@@ -28,7 +30,7 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
             'min-height: 60px;'
         )
         # Save UI reference so the updater can change its color
-        dashboard.__dict__['navigation_button'] = nav_button
+        ui_state.navigation_button = nav_button
 
         ui.separator().style('margin: 4px 0;')
         
@@ -63,7 +65,7 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
             'min-height: 50px;'
         )
 
-        dashboard.__dict__["free_drive_button"] =  button
+        ui_state.free_drive_button =  button
 
         ui.separator().style('margin: 4px 0;')
 
@@ -80,7 +82,7 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
             'min-height: 50px;'
         )
 
-        dashboard.__dict__["active_robot_button"] =  button
+        ui_state.active_robot_button =  button
         
         ui.separator().style('margin: 4px 0;')
 
@@ -97,4 +99,4 @@ def create_navigation_controls(dashboard: DashboardState, message_emit):
             'min-height: 50px;'
         )
 
-        dashboard.__dict__["upward_robot_button"] =  button
+        ui_state.upward_robot_button =  button
