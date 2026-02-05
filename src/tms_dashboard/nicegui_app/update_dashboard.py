@@ -1,66 +1,76 @@
 import numpy as np
 
-from tms_dashboard.utils.signal_processing import set_apply_baseline_all
+from tms_dashboard.utils.signal_processing import set_apply_baseline_all, new_indexes_fast_tol
 from tms_dashboard.nicegui_app.styles import change_color, change_icon, change_label, get_status, change_button 
 
 class UpdateDashboard:
-    def __init__(self, dashboard, emg_connection):
+    def __init__(self, dashboard, emg_connection, client_manager):
         self.dashboard = dashboard
         self.emg_connection = emg_connection
+        self.client_manager = client_manager
 
     def update(self):
-        self.update_dashboard_colors()
-        self.update_indicators()
-        self.update_displacement_plot()
-        self.update_mep_plot()
-        self.update_buttons()
+        ui_states = self.client_manager.get_all_clients()
+        for ui_state in ui_states:
+            try:
+                self.update_dashboard_colors(ui_state)
+                self.update_indicators(ui_state)
+                self.update_buttons(ui_state)
+                # Plots need special handling because they might be heavy to update in loop if not careful,
+                # but for now we just update them all.
+                # Ideally, NiceGUI handles this efficiently.
+                self.update_displacement_plot(ui_state)
+                if self.dashboard.status_new_mep:
+                    self.update_mep_plot(ui_state)
+            except Exception as e:
+                print(f"Error updating client: {e}")
 
-    def update_dashboard_colors(self):
+    def update_dashboard_colors(self, ui_state):
         """Update all dashboard label colors based on state.
         
         Args:
-            dashboard: DashboardState instance
+            ui_state: DashboardUI instance
         """
         dashboard = self.dashboard
         
-        change_color(dashboard, "project", get_status(dashboard.project_set))
-        change_color(dashboard, "camera", get_status(dashboard.camera_set))
-        change_color(dashboard, "robot", get_status(dashboard.robot_set))
+        change_color(ui_state, "project", get_status(dashboard.project_set))
+        change_color(ui_state, "camera", get_status(dashboard.camera_set))
+        change_color(ui_state, "robot", get_status(dashboard.robot_set))
 
-        change_color(dashboard, "marker_probe", get_status(dashboard.probe_visible))
-        change_color(dashboard, "marker_head", get_status(dashboard.head_visible))
-        change_color(dashboard, "marker_coil", get_status(dashboard.coil_visible))
+        change_color(ui_state, "marker_probe", get_status(dashboard.probe_visible))
+        change_color(ui_state, "marker_head", get_status(dashboard.head_visible))
+        change_color(ui_state, "marker_coil", get_status(dashboard.coil_visible))
 
-        change_color(dashboard, "nasion", get_status(dashboard.image_NA_set))
-        change_icon(dashboard, "nasion", get_status(dashboard.image_NA_set))
-        change_color(dashboard, "r_fid", get_status(dashboard.image_RE_set))
-        change_icon(dashboard, "r_fid", get_status(dashboard.image_RE_set))
-        change_color(dashboard, "l_fid", get_status(dashboard.image_LE_set))
-        change_icon(dashboard, "l_fid", get_status(dashboard.image_LE_set))
-        change_color(dashboard, "nose", get_status(dashboard.tracker_NA_set))
-        change_icon(dashboard, "nose", get_status(dashboard.tracker_NA_set))
-        change_color(dashboard, "l_tragus", get_status(dashboard.tracker_LE_set))
-        change_icon(dashboard, "l_tragus", get_status(dashboard.tracker_LE_set))
-        change_color(dashboard, "r_tragus", get_status(dashboard.tracker_RE_set))
-        change_icon(dashboard, "r_tragus", get_status(dashboard.tracker_RE_set))
+        change_color(ui_state, "nasion", get_status(dashboard.image_NA_set))
+        change_icon(ui_state, "nasion", get_status(dashboard.image_NA_set))
+        change_color(ui_state, "r_fid", get_status(dashboard.image_RE_set))
+        change_icon(ui_state, "r_fid", get_status(dashboard.image_RE_set))
+        change_color(ui_state, "l_fid", get_status(dashboard.image_LE_set))
+        change_icon(ui_state, "l_fid", get_status(dashboard.image_LE_set))
+        change_color(ui_state, "nose", get_status(dashboard.tracker_NA_set))
+        change_icon(ui_state, "nose", get_status(dashboard.tracker_NA_set))
+        change_color(ui_state, "l_tragus", get_status(dashboard.tracker_LE_set))
+        change_icon(ui_state, "l_tragus", get_status(dashboard.tracker_LE_set))
+        change_color(ui_state, "r_tragus", get_status(dashboard.tracker_RE_set))
+        change_icon(ui_state, "r_tragus", get_status(dashboard.tracker_RE_set))
 
-        change_color(dashboard, "target", get_status(dashboard.target_set))
-        change_color(dashboard, "moving", get_status(dashboard.robot_moving))
-        change_color(dashboard, "coil", get_status(dashboard.at_target))
-        # change_color(dashboard, "trials", get_status(dashboard.trials_started))
+        change_color(ui_state, "target", get_status(dashboard.target_set))
+        change_color(ui_state, "moving", get_status(dashboard.robot_moving))
+        change_color(ui_state, "coil", get_status(dashboard.at_target))
+        # change_color(ui_state, "trials", get_status(dashboard.trials_started))
 
 
-    def update_indicators(self):
+    def update_indicators(self, ui_state):
         """Update all dashboard indicators."""
         dashboard = self.dashboard
-        change_label(dashboard, "distance", str(round(dashboard.module_displacement, 2)) + " mm")
-        change_label(dashboard, "force", str(round(dashboard.force, 2)) + " N")
+        change_label(ui_state, "distance", str(round(dashboard.module_displacement, 2)) + " mm")
+        change_label(ui_state, "force", str(round(dashboard.force, 2)) + " N")
 
-    def update_displacement_plot(self):
+    def update_displacement_plot(self, ui_state):
         """Update displacement plot with current history data.
         
         Args:
-            dashboard: DashboardState instance
+            ui_state: DashboardUI instance
         """
 
         dashboard = self.dashboard
@@ -72,7 +82,7 @@ class UpdateDashboard:
         z_data = list(dashboard.displacement_history_z)
         
         # Clear and redraw the plot
-        ax = dashboard.displacement_ax
+        ax = ui_state.displacement_ax
         if ax is None:
             return
         ax.clear()
@@ -90,39 +100,25 @@ class UpdateDashboard:
         ax.legend(loc='upper right', fontsize=9, framealpha=0.9)
         
         # Update the plot widget
-        dashboard.displacement_plot.update()
+        if ui_state.displacement_plot:
+            ui_state.displacement_plot.update()
     
-    def update_mep_plot(self, num_windows=5):
+    def update_mep_plot(self, ui_state, num_windows=5):
         """Update MEP plot with current history data.
         
         Args:
-            dashboard: DashboardState instance
+            ui_state: DashboardUI instance
         """
-        mep_history = list(self.emg_connection.get_triggered_window())
-        if np.array_equal(mep_history, self.dashboard.mep_history):
-            return
-        
-        if len(mep_history) == 0:
-            return
 
         dashboard = self.dashboard
-        mep_sampling_rate = dashboard.mep_sampling_rate = self.emg_connection.get_sampling_rate()
         
         # Aplicar baseline entre 5-20ms
         t_min_ms = self.emg_connection.t_min * 1000
         t_max_ms = self.emg_connection.t_max * 1000
         
-        mep_history = set_apply_baseline_all(
-            baseline_start_ms=5,      # Início do baseline em 5ms
-            baseline_end_ms=20,        # Fim do baseline em 20ms
-            signal_start_ms=t_min_ms,  # Sinal começa em -10ms
-            signal_end_ms=t_max_ms,    # Sinal termina em 40ms
-            data_windows=mep_history[-num_windows:], 
-            sampling_rate=mep_sampling_rate
-        )
+        mep_history = dashboard.mep_history_baseline[-num_windows:]
 
-        dashboard.mep_history = mep_history
-        ax = dashboard.mep_ax
+        ax = ui_state.mep_ax
         ax.clear()
 
         t_ms = np.linspace(t_min_ms, t_max_ms, len(mep_history[0]))
@@ -139,12 +135,13 @@ class UpdateDashboard:
         ax.legend(loc='upper right', fontsize=9, framealpha=0.9)
         
         # Update the plot widget
-        dashboard.mep_plot.update()
+        if ui_state.mep_plot:
+            ui_state.mep_plot.update()
 
-    def update_buttons(self):
+    def update_buttons(self, ui_state):
         dashboard = self.dashboard
         """Update all dashboard buttons."""
-        change_button(dashboard, "navigation_button", get_status(dashboard.navigation_button_pressed))
-        change_button(dashboard, "upward_robot_button", get_status(dashboard.move_upward_robot_pressed), ("#5898d46c", "#ffffff00"))
-        change_button(dashboard, "active_robot_button", get_status(dashboard.active_robot_pressed), ("#5898d46c", "#ffffff00"))  
-        change_button(dashboard, "free_drive_button", get_status(dashboard.free_drive_robot_pressed), ("#5898d46c", "#ffffff00")) 
+        change_button(ui_state, "navigation_button", get_status(dashboard.navigation_button_pressed))
+        change_button(ui_state, "upward_robot_button", get_status(dashboard.move_upward_robot_pressed), ("#5898d46c", "#ffffff00"))
+        change_button(ui_state, "active_robot_button", get_status(dashboard.active_robot_pressed), ("#5898d46c", "#ffffff00"))  
+        change_button(ui_state, "free_drive_button", get_status(dashboard.free_drive_robot_pressed), ("#5898d46c", "#ffffff00")) 

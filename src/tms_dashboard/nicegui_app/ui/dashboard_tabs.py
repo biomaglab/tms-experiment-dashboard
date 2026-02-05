@@ -13,7 +13,9 @@ from .widgets import (
 )
 
 
-def create_dashboard_tabs(dashboard: DashboardState, message_emit):
+from tms_dashboard.nicegui_app.ui_state import DashboardUI
+
+def create_dashboard_tabs(dashboard: DashboardState, message_emit, ui_state: DashboardUI):
     """Create 2x2 grid dashboard layout.
     
     Layout (no scrolling):
@@ -22,6 +24,8 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
     
     Args:
         dashboard: DashboardState instance
+        message_emit: Message emitter instance
+        ui_state: DashboardUI instance (per-client UI state)
     """
     # Main container - 2 rows
     with ui.column().classes('w-full').style(
@@ -62,7 +66,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'display: flex; '
                 'flex-direction: column;'
             ):
-                create_status_widgets(dashboard)
+                create_status_widgets(dashboard, ui_state)
         
         # ===== ROW 2 (35% height): Time Series Graph + Navigation Controls =====
         with ui.row().classes('w-full').style(
@@ -81,7 +85,7 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'height: 100%; '
                 'background-color: #f9fafb;'
             ):
-                create_time_series_panel(dashboard)
+                create_time_series_panel(dashboard, ui_state)
             
             # Navigation Controls (40% width)
             with ui.card().props('flat').style(
@@ -94,4 +98,4 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit):
                 'background-color: #f9fafb;'
                 'gap: 1.5rem;'
             ):
-                create_navigation_controls(dashboard, message_emit)
+                create_navigation_controls(dashboard, message_emit, ui_state)

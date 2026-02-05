@@ -80,13 +80,13 @@ def section_title_style() -> str:
     )
 
 
-def change_color(dashboard, target_label: str, new_status: str, colors: tuple = None):
+def change_color(ui_state, target_label: str, new_status: str, colors: tuple = None):
     """Change the color of a label and its associated icon.
 
     Supports labels/icons (original behavior) and the navigation button.
 
     Args:
-        dashboard: DashboardState instance containing label and icon references
+        ui_state: DashboardUI instance containing label and icon references
         target_label: Name of the label/button to update
         new_status: Status - 'success' or 'neutral'
         colors: Optional tuple (active_color, inactive_color) for buttons
@@ -98,48 +98,53 @@ def change_color(dashboard, target_label: str, new_status: str, colors: tuple = 
     else:
         color = colors[0] if new_status == 'success' else colors[1]
 
-    # Update label if exists in dashboard
+    # Update label if exists in ui_state
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, label_key):
-        label = getattr(dashboard, label_key)
-        label.style(f'font-size: 1.15rem; color: {color}; font-weight: 500;')
-        label.update()
+    if hasattr(ui_state, label_key):
+        label = getattr(ui_state, label_key)
+        if label:
+            label.style(f'font-size: 1.15rem; color: {color}; font-weight: 500;')
+            label.update()
 
     # Update associated icon if exists
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, icon_key):
-        icon = getattr(dashboard, icon_key)
-        icon.style(f'font-size: 25px; color: {color};')
-        icon.update()
+    if hasattr(ui_state, icon_key):
+        icon = getattr(ui_state, icon_key)
+        if icon:
+            icon.style(f'font-size: 25px; color: {color};')
+            icon.update()
 
-def change_icon(dashboard, target_label: str, new_status: str):
+def change_icon(ui_state, target_label: str, new_status: str):
     """Change the icon of a label based on status."""
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, icon_key):
-        icon = getattr(dashboard, icon_key)
-        icon.name = 'radio_button_unchecked' if new_status == 'neutral' else 'radio_button_checked'
-        icon.update()
+    if hasattr(ui_state, icon_key):
+        icon = getattr(ui_state, icon_key)
+        if icon:
+            icon.name = 'radio_button_unchecked' if new_status == 'neutral' else 'radio_button_checked'
+            icon.update()
 
-def change_label(dashboard, target_label: str, new_text: str):
+def change_label(ui_state, target_label: str, new_text: str):
     """Change the label of a label based on status."""
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
-    if hasattr(dashboard, label_key):
-        label = getattr(dashboard, label_key)
-        label.text = new_text
-        label.update()
+    if hasattr(ui_state, label_key):
+        label = getattr(ui_state, label_key)
+        if label:
+            label.text = new_text
+            label.update()
 
 def get_status(condition: bool) -> str:
     return 'success' if condition else 'neutral'
 
-def change_button(dashboard, target_label: str, new_status: str, colors: tuple = None):
+def change_button(ui_state, target_label: str, new_status: str, colors: tuple = None):
     # Special handling for the START NAVIGATION button
-    if hasattr(dashboard, target_label):
+    if hasattr(ui_state, target_label):
         if colors is None:
             color = '#10b981' if new_status == 'success' else '#9ca3af'
         else:
             color = colors[0] if new_status == 'success' else colors[1]
 
-        button = getattr(dashboard, target_label)
+        button = getattr(ui_state, target_label)
         # Fallback: inline style
-        button.style(f'background-color: {color} !important;')
-        button.update()
+        if button:
+            button.style(f'background-color: {color} !important;')
+            button.update()

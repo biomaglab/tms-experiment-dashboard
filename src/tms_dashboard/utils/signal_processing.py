@@ -65,3 +65,27 @@ def set_apply_baseline_all(baseline_start_ms, baseline_end_ms, signal_start_ms, 
         )
         processed_data.append(corrected)
     return processed_data
+
+def new_indexes_fast_tol(A, B, decimals=5):
+    """
+    Retorna os índices de B cujas séries temporais
+    não existem em A (com tolerância numérica).
+    """
+    A = np.asarray(A)
+    B = np.asarray(B)
+
+    # quantização (estável e rápida)
+    Aq = np.round(A, decimals=decimals)
+    Bq = np.round(B, decimals=decimals)
+
+    # hash por linha
+    set_A = {tuple(row) for row in Aq}
+
+    # índices novos
+    return [i for i, row in enumerate(Bq) if tuple(row) not in set_A]
+
+def p2p_from_time(signal, fs, tmin_ms, start_ms=10):
+    signal = np.asarray(signal)
+    start_idx = int(round((start_ms - tmin_ms) * fs / 1000))
+    cropped = signal[start_idx:]
+    return np.ptp(cropped)
