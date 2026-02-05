@@ -21,13 +21,13 @@ from tms_dashboard.nicegui_app.client_manager import ClientManager
 from tms_dashboard.nicegui_app.ui_state import DashboardUI
 
 # Global shared instances (persist across all sessions)
+client_manager = ClientManager()
 dashboard = DashboardState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
-message_handler = MessageHandler(socket_client, dashboard)
-neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
-client_manager = ClientManager()
-update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manager)
 message_emit = Message2Server(socket_client, dashboard)
+message_handler = MessageHandler(socket_client, dashboard, message_emit)
+neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
+update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manager)
 
 # Flag to ensure background thread starts only once
 _background_thread_started = False

@@ -44,31 +44,30 @@ class UpdateDashboard:
         change_color(ui_state, "emg", get_status(self.emg_connection.get_connection()))
 
         if dashboard.probe_visible:
-            path_probe = str(IMAGES_DIR / 'icones/stylus_icon_green.png') 
+            path_probe = str(IMAGES_DIR / 'visibilities_markers_icon/stylus_icon_green.png') 
         else:
-            path_probe = str(IMAGES_DIR / 'icones/stylus_icon.png')
+            path_probe = str(IMAGES_DIR / 'visibilities_markers_icon/stylus_icon.png')
         change_image(ui_state, "probe", path_probe)
 
         if dashboard.head_visible:
-            path_head = str(IMAGES_DIR / 'icones/head_icon_green.png') 
+            path_head = str(IMAGES_DIR / 'visibilities_markers_icon/head_icon_green.png') 
         else:
-            path_head = str(IMAGES_DIR / 'icones/head_icon.png')
+            path_head = str(IMAGES_DIR / 'visibilities_markers_icon/head_icon.png')
         change_image(ui_state, "head", path_head)
 
         if dashboard.coil_visible:
-            path_coil = str(IMAGES_DIR / 'icones/coil_no_handle_icon_green.png') 
+            path_coil = str(IMAGES_DIR / 'visibilities_markers_icon/coil_no_handle_icon_green.png') 
         else:
-            path_coil = str(IMAGES_DIR / 'icones/coil_no_handle_icon.png')
+            path_coil = str(IMAGES_DIR / 'visibilities_markers_icon/coil_no_handle_icon.png')
         change_image(ui_state, "coil", path_coil)
 
         status = get_status(dashboard.image_fiducials)
-        change_color(dashboard, "image_fiducials", status)
-        change_radio_icon(dashboard, "image_fiducials", status)
+        change_color(ui_state, "image_fiducials", status)
+        change_radio_icon(ui_state, "image_fiducials", status)
 
         status = get_status(dashboard.tracker_fiducials)
-        change_color(dashboard, "tracker_fiducials", status)
-        change_radio_icon(dashboard, "tracker_fiducials", status)
-
+        change_color(ui_state, "tracker_fiducials", status)
+        change_radio_icon(ui_state, "tracker_fiducials", status)
 
         change_color(ui_state, "target", get_status(dashboard.target_set))
         change_color(ui_state, "moving", get_status(dashboard.robot_moving))
