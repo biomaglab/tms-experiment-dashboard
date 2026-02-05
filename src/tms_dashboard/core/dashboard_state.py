@@ -65,8 +65,7 @@ class DashboardState:
         self.force = 0.0
         
         # Displacement history for time series plotting (x, y, z only)
-        self.displacement_ax = None
-        self.displacement_plot = None
+        # UI-specific plots are now in DashboardUI (per client)
         self.max_history_length = 100  # Maximum number of samples to keep
         self.displacement_history_x = deque(maxlen=self.max_history_length)
         self.displacement_history_y = deque(maxlen=self.max_history_length)
@@ -75,8 +74,7 @@ class DashboardState:
         self._start_time = time.time()  # Reference time for plotting
 
         # Motor evoked potentials plots and history
-        self.mep_ax = None
-        self.mep_plot = None
+        # UI-specific plots are now in DashboardUI (per client)
         self.mep_history = []
         self.mep_history_baseline = []
         self.mep_sampling_rate = None

@@ -8,7 +8,9 @@ from matplotlib.figure import Figure
 from tms_dashboard.core.dashboard_state import DashboardState
 
 
-def create_time_series_panel(dashboard: DashboardState):
+from tms_dashboard.nicegui_app.ui_state import DashboardUI
+
+def create_time_series_panel(dashboard: DashboardState, ui_state: DashboardUI):
     """Create time series graphs panel using the documentation pattern."""
     
     with ui.row().style("gap: 0.5rem; width: 100%; height: 100%;"):
@@ -36,8 +38,8 @@ def create_time_series_panel(dashboard: DashboardState):
                 mep_plot.update()
             
             # Guardamos as referências para atualizar depois
-            dashboard.mep_plot = mep_plot
-            dashboard.mep_ax = ax_mep
+            ui_state.mep_plot = mep_plot
+            ui_state.mep_ax = ax_mep
 
         # --- Gráfico 2: Displacement ---
         with ui.column().style('flex: 1; height: 100%; min-width: 0; max-width: 50%;'):
@@ -55,5 +57,5 @@ def create_time_series_panel(dashboard: DashboardState):
                 fig_disp.tight_layout()
 
             # Guardamos as referências
-            dashboard.displacement_plot = displacement_plot
-            dashboard.displacement_ax = ax_disp
+            ui_state.displacement_plot = displacement_plot
+            ui_state.displacement_ax = ax_disp
