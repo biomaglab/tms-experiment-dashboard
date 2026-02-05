@@ -65,7 +65,7 @@ def start_background_services():
                 
                 update_dashboard.update()
                 if dashboard.status_new_mep:
-                    new_meps_only = [dashboard.mep_history_baseline[i] for i in dashboard.new_meps_index]
+                    new_meps_only = [dashboard.mep_p2p_history_baseline[i] for i in dashboard.new_meps_index]
                     message_emit.send_mep_value(new_meps_only)
 
                     

@@ -7,7 +7,7 @@ from collections import deque
 import time
 import numpy as np
 
-from tms_dashboard.utils.signal_processing import set_apply_baseline_all, new_indexes_fast_tol
+from tms_dashboard.utils.signal_processing import set_apply_baseline_all, new_indexes_fast_tol, p2p_from_time
 
 
 @dataclass
@@ -85,6 +85,7 @@ class DashboardState:
         # UI-specific plots are now in DashboardUI (per client)
         self.mep_history = []
         self.mep_history_baseline = []
+        self.mep_p2p_history_baseline = []
         self.mep_sampling_rate = None
         self.status_new_mep = False
         self.new_meps_index = []
@@ -166,6 +167,7 @@ class DashboardState:
                                 data_windows=new_mep_history, 
                                 sampling_rate=sampling_rate
                             )
+        self.mep_p2p_history_baseline = [p2p_from_time(mep, self.mep_sampling_rate, t_min) for mep in self.mep_history_baseline]
         self.status_new_mep = True
     
     def get_all_state_mep(self):
