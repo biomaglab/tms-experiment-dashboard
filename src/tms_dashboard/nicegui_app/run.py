@@ -21,13 +21,13 @@ from tms_dashboard.nicegui_app.client_manager import ClientManager
 from tms_dashboard.nicegui_app.ui_state import DashboardUI
 
 # Global shared instances (persist across all sessions)
+client_manager = ClientManager()
 dashboard = DashboardState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
-message_handler = MessageHandler(socket_client, dashboard)
-neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
-client_manager = ClientManager()
-update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manager)
 message_emit = Message2Server(socket_client, dashboard)
+message_handler = MessageHandler(socket_client, dashboard, message_emit)
+neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
+update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manager)
 
 # Flag to ensure background thread starts only once
 _background_thread_started = False
@@ -95,6 +95,7 @@ def index():
         <style>
             :root {
                 --nicegui-default-gap: 0;
+                --nicegui-default-padding: 0.5rem;
             }
             body {
                 margin: 0 !important;
@@ -103,16 +104,6 @@ def index():
         </style>
     ''')
     
-    # Build UI using shared dashboard instance
-    create_header(dashboard)
-    
-    # Main tabs (single Dashboard tab). Checklist is available from the header dialog.
-    with ui.tabs().classes('w-full') as tabs:
-        dashboard_tab = ui.tab('Dashboard')
-
-    with ui.tab_panels(tabs, value=dashboard_tab).classes('w-full').style('height: calc(100vh - 110px);'):
-        with ui.tab_panel(dashboard_tab):
-            create_dashboard_tabs(dashboard)
     # Create per-session UI state
     ui_state = DashboardUI()
     client_manager.register(ui_state)
@@ -121,7 +112,7 @@ def index():
     ui.context.client.on_disconnect(lambda: client_manager.unregister(ui_state))
 
     # Build UI using shared dashboard instance and per-session UI state
-    create_header(dashboard, ui_state)
+    create_header(dashboard)
     create_dashboard_tabs(dashboard, message_emit, ui_state)
 
 

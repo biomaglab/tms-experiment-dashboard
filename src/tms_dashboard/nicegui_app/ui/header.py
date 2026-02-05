@@ -10,7 +10,7 @@ from tms_dashboard.nicegui_app.ui.experiment_form import create_experiment_form
 from tms_dashboard.nicegui_app.ui.checklist_tab import create_checklist_tab
 
 
-def create_header(dashboard: DashboardState, ui_state=None):
+def create_header(dashboard: DashboardState):
     """Create clean minimal header with working experiment config dialog.
     
     Args:
@@ -20,7 +20,7 @@ def create_header(dashboard: DashboardState, ui_state=None):
     # Header row
     with ui.row().classes('w-full items-center justify-between').style(
         'background-color: #ffffff;'
-        'padding: 16px 32px;'
+        'padding: 10px 32px;'
         'border-bottom: 1px solid #e5e7eb;'
         'box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);'
     ):
@@ -61,5 +61,5 @@ def create_header(dashboard: DashboardState, ui_state=None):
 
                 dialog.open()
 
-            checklist_btn = ui.button('Checklist', on_click=show_checklist_dialog, icon='checklist').props('outline')
+            checklist_btn = ui.button('Checklist', on_click=show_checklist_dialog, icon='checklist').props('flat')
             checklist_btn.style('min-height: 40px; padding: 6px 12px; display: inline-flex; align-items: center; margin-left: 8px;')

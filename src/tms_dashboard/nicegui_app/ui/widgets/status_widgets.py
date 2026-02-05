@@ -3,148 +3,102 @@
 """Status widgets panel - consolidates all status displays."""
 
 from nicegui import ui
+
+from tms_dashboard.config import IMAGES_DIR
 from tms_dashboard.core.dashboard_state import DashboardState
-
-
 from tms_dashboard.nicegui_app.ui_state import DashboardUI
 
-def create_status_widgets(dashboard: DashboardState, ui_state: DashboardUI):
-    """Create consolidated status panel with all status sections.
-    
-    Contains:
-    - Connection: Project, Robot, Camera
-    - Markers: Head, Coil, Probe
-    - Fiducials: Image & Tracker
-    - Status: Target, Coil, Moving Robot
-    - Indicators: Distance, Angle, Force
-    
-    Args:
-        dashboard: DashboardState instance
-    """
-    # Status section - 2x2 grid (horizontal layout)
-    with ui.column().style('margin-bottom: 5px;'):
-        ui.label('Connection').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
+def create_status_widgets(ui_state: DashboardUI):
+    with ui.row().classes('w-full h-full').style('gap: 0;'):
+        # Left Column: Marker Images (Probe, Head, Coil)
+        with ui.column().classes('h-full').style('flex: 30;align-items: center;'):
+            image = ui.image(str(IMAGES_DIR / 'visibilities_markers_icon/stylus_icon.png')).classes('rounded').style(
+                'width: 140px; height: 140px; object-fit: cover'
+            )
+            ui.label('Probe').style('font-size: 1.2rem; color: #9ca3af; font-weight: 500;')
+            ui_state.image_probe = image
+
+            image = ui.image(str(IMAGES_DIR / 'visibilities_markers_icon/head_icon.png')).classes('rounded').style(
+                'width: 140px; height: 140px; object-fit: cover;'
+            )
+            ui.label('Head').style('font-size: 1.2rem; color: #9ca3af; font-weight: 500;')
+            ui_state.image_head = image
+
+            image = ui.image(str(IMAGES_DIR / 'visibilities_markers_icon/coil_no_handle_icon.png')).classes('rounded').style(
+                'width: 140px; height: 140px; object-fit: cover;'
+            )
+            ui.label('Coil').style('font-size: 1.2rem; color: #9ca3af; font-weight: 500;')
+            ui_state.image_coil = image
         
-        with ui.row().style('gap: 2.5rem; flex: 1; align-items: center;'):
-            with ui.row().style('gap: 5px;'):
-                icon = ui.icon('computer').style('font-size: 22px; color: #9ca3af;')
-                ui.label('Project').style('font-size: 1.0rem; color: #9ca3af;')
-                ui_state.icon_project = icon
-            with ui.row().style('gap: 5px;'):
-                icon = ui.icon('precision_manufacturing').style('font-size: 22px; color: #9ca3af;')
-                label = ui.label('Robot').style('font-size: 1.0rem; color: #9ca3af;')
-                ui_state.icon_robot = icon
-                ui_state.label_robot = label
-            with ui.row().style('gap: 5px;'):
-                icon = ui.icon('videocam').style('font-size: 22px; color: #9ca3af;')
-                label = ui.label('Camera').style('font-size: 1.0rem; color: #9ca3af;')
-                ui_state.icon_camera = icon
-                ui_state.label_camera = label
-            # with ui.row().style('gap: 5px;'):
-            #     icon = ui.icon('offline_bolt').style('font-size: 22px; color: #9ca3af;')               aqui
-            #     label = ui.label('TMS').style('font-size: 1.0rem; color: #9ca3af;')
-            #     ui_state.icon_tms = icon
-            #     ui_state.label_tms = label
-    
-    ui.separator().style('margin: 4px 0;')
-    
-    # Markers section - horizontal row
-    with ui.column().style('margin-bottom: 5px;'):
-        ui.label('Markers').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
-        
-        with ui.row().style('gap: 2.5rem; width: 100%;'):
-            for label_text, icon in [
-                ('Head', 'face'),
-                ('Coil', 'sensors'),
-                ('Probe', 'sensors'),
-            ]:
-                with ui.row().style('gap: 4px;'):
-                    icon = ui.icon(icon).style('font-size: 22px; color: #9ca3af;')
-                    label = ui.label(label_text).style('font-size: 1.1rem; color: #9ca3af;')
-                    setattr(ui_state, f'icon_marker_{label_text.lower()}', icon)
-                    setattr(ui_state, f'label_marker_{label_text.lower()}', label)
-    
-    ui.separator().style('margin: 4px 0;')
-    
-    # Fiducials section - side by side (Image | Tracker)
-    with ui.column().style('margin-bottom: 5px;'):
-        ui.label('Fiducials').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
-        
-        with ui.row().style('gap: 2.5rem;'):
-            # Image fiducials (left column)
-            with ui.column().style('gap: 1px;'):
-                ui.label('Image').style('font-size: 1.3rem; color: #6B6B6B; margin-bottom: 1px;')
-                for label_text, icon_name in [
-                    ('L Fid', 'radio_button_unchecked'),
-                    ('Nasion', 'radio_button_unchecked'),
-                    ('R Fid', 'radio_button_unchecked'),
-                ]:
-                    with ui.row().classes('items-center').style('gap: 2px;'):
-                        icon = ui.icon(icon_name).style('font-size: 15px; color: #9ca3af;')
-                        label = ui.label(label_text).style('font-size: 1rem; color: #9ca3af;')
+        # Right Column: Status Details
+        with ui.column().classes('h-full').style('flex: 70;'):
+            # Row 1: Connections
+            with ui.row().classes('w-full').style('gap: 2px; flex: 15; flex-direction:column;'):
+                ui.label('Connections').style('font-size: 1.1rem; font-weight: 600; color: #4b5563; margin-bottom: 5px;')
+
+                with ui.row().style('gap: 2.5rem; flex: 1;'):
+                    with ui.row().style('gap: 5px;'):
+                        icon = ui.icon('monitor_heart').style('font-size: 22px; color: #9ca3af;')
+                        label = ui.label('EMG').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
+                        ui_state.icon_emg = icon
+                        ui_state.label_emg = label
+                    with ui.row().style('gap: 5px;'):
+                        icon = ui.icon('precision_manufacturing').style('font-size: 22px; color: #9ca3af;')
+                        label = ui.label('Robot').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
+                        ui_state.icon_robot = icon
+                        ui_state.label_robot = label
+                    with ui.row().style('gap: 5px;'):
+                        icon = ui.icon('videocam').style('font-size: 22px; color: #9ca3af;')
+                        label = ui.label('Camera').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
+                        ui_state.icon_camera = icon
+                        ui_state.label_camera = label
+
+            ui.separator()
+            
+            # Row 2: Status Indicators (Force, Moving, Target)
+            ui.label('Status').style('font-size: 1.1rem; font-weight: 600; color: #4b5563; margin-bottom: 5px;')
+            with ui.row().classes('w-full').style('gap: 2px; flex: 70;'):
+                with ui.column().classes('h-full').style('flex: 50; justify-content: center;'):
+                    with ui.column().classes('w-full').style('gap: 2px; justify-content: center; align-items: center; flex: 1;'):
+                        # Circular Progress used in HEAD
+                        force = ui.circular_progress(size='80px',min=0, max=10, value=0).classes('force-progress').style('color: #9ca3af;')
+                        ui_state.force_indicator = force
+                        ui.label('Force (N)').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
+                        ui.add_head_html("<style>.q-circular-progress__text .text-xs {font-size: 1.2rem}</style>")
+
+                    with ui.column().classes('w-full').style('gap: 2px; justify-content: center; align-items: center; flex: 1;'):
+                        icon = ui.icon('precision_manufacturing').style('font-size: 80px; color: #9ca3af;')
+                        label = ui.label('Moving Robot').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
+                        ui_state.icon_moving = icon
+                        ui_state.label_moving = label
+
+                with ui.column().classes('h-full').style('flex: 50; justify-content: center;'):
+                    with ui.column().classes('w-full').style('gap: 2px; justify-content: center; align-items: center; flex: 1;'):
+                        icon = ui.icon('gps_fixed').style('font-size: 80px; color: #9ca3af;')
+                        label = ui.label('Coil at target').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
+                        ui_state.icon_coil = icon
+                        ui_state.label_coil = label
+                    with ui.column().classes('w-full').style('gap: 2px; justify-content: center; align-items: center; flex: 1;'):
+                        icon = ui.icon('radar').style('font-size: 80px; color: #9ca3af;')
+                        label = ui.label('Target set').style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
+                        ui_state.icon_target = icon
+                        ui_state.label_target = label
+            
+            ui.separator()
+            
+            # Row 3: Fiducials
+            with ui.row().classes('w-full').style('gap: 2px; flex: 15; flex-direction:column;'):
+                ui.label('Fiducials').style('font-size: 1.1rem; font-weight: 600; color: #4b5563; margin-bottom: 5px;')
+                with ui.row().style('gap: 2.5rem; flex: 1;'):
+                    with ui.row().style('gap: 5px; align-items: center;'):
+                        label_text = "Image Fiducials"
+                        icon = ui.icon('radio_button_unchecked').style('font-size: 15px; color: #9ca3af;')
+                        label = ui.label(label_text).style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
                         setattr(ui_state, f'icon_{label_text.lower().replace(" ", "_")}', icon)
                         setattr(ui_state, f'label_{label_text.lower().replace(" ", "_")}', label)
-            
-            # Tracker fiducials (right column)
-            with ui.column().style('gap: 1px;'):
-                ui.label('Tracker').style('font-size: 1.3rem; color: #6B6B6B; margin-bottom: 1px;')
-                for label_text, icon_name in [
-                    ('L Tragus', 'radio_button_unchecked'),
-                    ('Nose', 'radio_button_unchecked'),
-                    ('R Tragus', 'radio_button_unchecked'),
-                ]:
-                    with ui.row().classes('items-center').style('gap: 2px;'):
-                        icon = ui.icon(icon_name).style('font-size: 15px; color: #9ca3af;')
-                        label = ui.label(label_text).style('font-size: 1rem; color: #9ca3af;')
+                    with ui.row().style('gap: 5px; align-items: center;'):
+                        label_text = "Tracker Fiducials"
+                        icon = ui.icon('radio_button_unchecked').style('font-size: 15px; color: #9ca3af;')
+                        label = ui.label(label_text).style('font-size: 1.15rem; color: #9ca3af; font-weight: 500;')
                         setattr(ui_state, f'icon_{label_text.lower().replace(" ", "_")}', icon)
                         setattr(ui_state, f'label_{label_text.lower().replace(" ", "_")}', label)
-    
-    ui.separator().style('margin: 4px 0;')
-    
-    # Robot section - 2x2 grid
-    with ui.column().style('gap: 1px;'):
-        ui.label('Status').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
-        
-        with ui.row().style('gap: 2.5rem; margin-bottom: 2px; width: 100%;'):
-            with ui.row().style('gap: 3px;'):
-                icon = ui.icon('gps_fixed').style('font-size: 22px; color: #9ca3af;')
-                label = ui.label('Target').style(f'font-size: 1.0rem; color: #9ca3af;')
-                ui_state.icon_target = icon
-                ui_state.label_target = label
-            
-            with ui.row().style('gap: 3px;'):
-                icon = ui.icon('radar').style('font-size: 22px; color: #9ca3af;')
-                label = ui.label('Coil at target').style('font-size: 1.0rem; color: #9ca3af;')
-                ui_state.icon_coil = icon
-                ui_state.label_coil = label
-        
-            with ui.row().style('gap: 3px;'):
-                icon = ui.icon('sync').style('font-size: 22px; color: #9ca3af;')
-                label = ui.label('Moving Robot').style('font-size: 1.0rem; color: #9ca3af;')
-                ui_state.icon_moving = icon
-                ui_state.label_moving = label
-            
-            # with ui.row().style('gap: 3px;'):
-            #     icon = ui.icon('dataset').style('font-size: 22px; color: #9ca3af;')
-            #     label = ui.label('Trials').style('font-size: 1.0rem; color: #9ca3af;')
-            #     ui_state.icon_trials = icon
-            #     ui_state.label_trials = label
-    
-    ui.separator().style('margin: 4px 0;')
-    
-    # Indicators section - Distance, Angle, Force
-    with ui.column().style('gap: 1px;'):
-        ui.label('Indicators').style('font-size: 1.4rem; font-weight: 600; color: #6B6B6B; margin-bottom: 2px;')
-        with ui.row().style('gap: 2rem;'):
-            # Distance
-            with ui.row().style('gap: 2px; align-items: center;'):
-                ui.label('Distance:').style('font-size: 0.9rem; color: #6B6B6B; font-weight: 600;')
-                label = ui.label('0.0 mm').style('font-size: 1.1rem; color: #3b82f6; font-weight: 500;')
-                ui_state.label_distance = label
-                       
-            # Force Sensor
-            with ui.row().style('gap: 2px; align-items: center;'):
-                ui.label('Force Sensor:').style('font-size: 0.9rem; color: #6B6B6B; font-weight: 600;')
-                label = ui.label('0.0 N').style('font-size: 1.1rem; color: #10b981; font-weight: 500;')
-                ui_state.label_force = label
-    

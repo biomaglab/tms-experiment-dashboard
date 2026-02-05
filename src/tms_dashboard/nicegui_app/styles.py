@@ -103,7 +103,7 @@ def change_color(ui_state, target_label: str, new_status: str, colors: tuple = N
     if hasattr(ui_state, label_key):
         label = getattr(ui_state, label_key)
         if label:
-            label.style(f'font-size: 1.15rem; color: {color}; font-weight: 500;')
+            label.style(f'color: {color};')
             label.update()
 
     # Update associated icon if exists
@@ -111,11 +111,11 @@ def change_color(ui_state, target_label: str, new_status: str, colors: tuple = N
     if hasattr(ui_state, icon_key):
         icon = getattr(ui_state, icon_key)
         if icon:
-            icon.style(f'font-size: 25px; color: {color};')
+            icon.style(f'color: {color};')
             icon.update()
 
 def change_icon(ui_state, target_label: str, new_status: str):
-    """Change the icon of a label based on status."""
+    """Change the icon of a label based on status (for Material Icons/Radio Buttons)."""
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
     if hasattr(ui_state, icon_key):
         icon = getattr(ui_state, icon_key)
@@ -123,8 +123,12 @@ def change_icon(ui_state, target_label: str, new_status: str):
             icon.name = 'radio_button_unchecked' if new_status == 'neutral' else 'radio_button_checked'
             icon.update()
 
+def change_radio_icon(ui_state, target_label: str, new_status: str):
+    """Alias for change_icon (compatibility)."""
+    change_icon(ui_state, target_label, new_status)
+
 def change_label(ui_state, target_label: str, new_text: str):
-    """Change the label of a label based on status."""
+    """Change the label text."""
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
     if hasattr(ui_state, label_key):
         label = getattr(ui_state, label_key)
@@ -148,3 +152,20 @@ def change_button(ui_state, target_label: str, new_status: str, colors: tuple = 
         if button:
             button.style(f'background-color: {color} !important;')
             button.update()
+
+def change_image(ui_state, target_label: str, icon_path):
+    """Change the source of a ui.image widget."""
+    image_key = f'image_{target_label.lower().replace(" ", "_")}'
+    if hasattr(ui_state, image_key):
+        image = getattr(ui_state, image_key)
+        if image and image.source != icon_path:
+            image.set_source(icon_path)
+            image.force_reload()
+
+def change_progress_ui(ui_state, target_label: str, value):
+    """Update value of a circular progress indicator."""
+    key = f'{target_label.lower().replace(" ", "_")}'
+    if hasattr(ui_state, key):
+        progress_ui = getattr(ui_state, key)
+        if progress_ui and progress_ui.value != value:
+            progress_ui.set_value(value)

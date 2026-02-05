@@ -1,7 +1,12 @@
-import numpy as np
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Update dashboard module - manages real-time UI updates."""
 
-from tms_dashboard.utils.signal_processing import set_apply_baseline_all, new_indexes_fast_tol
-from tms_dashboard.nicegui_app.styles import change_color, change_icon, change_label, get_status, change_button 
+import numpy as np
+import plotly.graph_objects as go
+
+from tms_dashboard.nicegui_app.styles import change_color, change_radio_icon, change_label, get_status, change_button, change_icon, change_progress_ui, change_image
+from tms_dashboard.config import IMAGES_DIR
 
 class UpdateDashboard:
     def __init__(self, dashboard, emg_connection, client_manager):
@@ -20,6 +25,7 @@ class UpdateDashboard:
                 # but for now we just update them all.
                 # Ideally, NiceGUI handles this efficiently.
                 self.update_displacement_plot(ui_state)
+                self.update_rotation_plot(ui_state)
                 if self.dashboard.status_new_mep:
                     self.update_mep_plot(ui_state)
             except Exception as e:
@@ -33,38 +39,45 @@ class UpdateDashboard:
         """
         dashboard = self.dashboard
         
-        change_color(ui_state, "project", get_status(dashboard.project_set))
         change_color(ui_state, "camera", get_status(dashboard.camera_set))
         change_color(ui_state, "robot", get_status(dashboard.robot_set))
+        change_color(ui_state, "emg", get_status(self.emg_connection.get_connection()))
 
-        change_color(ui_state, "marker_probe", get_status(dashboard.probe_visible))
-        change_color(ui_state, "marker_head", get_status(dashboard.head_visible))
-        change_color(ui_state, "marker_coil", get_status(dashboard.coil_visible))
+        if dashboard.probe_visible:
+            path_probe = str(IMAGES_DIR / 'visibilities_markers_icon/stylus_icon_green.png') 
+        else:
+            path_probe = str(IMAGES_DIR / 'visibilities_markers_icon/stylus_icon.png')
+        change_image(ui_state, "probe", path_probe)
 
-        change_color(ui_state, "nasion", get_status(dashboard.image_NA_set))
-        change_icon(ui_state, "nasion", get_status(dashboard.image_NA_set))
-        change_color(ui_state, "r_fid", get_status(dashboard.image_RE_set))
-        change_icon(ui_state, "r_fid", get_status(dashboard.image_RE_set))
-        change_color(ui_state, "l_fid", get_status(dashboard.image_LE_set))
-        change_icon(ui_state, "l_fid", get_status(dashboard.image_LE_set))
-        change_color(ui_state, "nose", get_status(dashboard.tracker_NA_set))
-        change_icon(ui_state, "nose", get_status(dashboard.tracker_NA_set))
-        change_color(ui_state, "l_tragus", get_status(dashboard.tracker_LE_set))
-        change_icon(ui_state, "l_tragus", get_status(dashboard.tracker_LE_set))
-        change_color(ui_state, "r_tragus", get_status(dashboard.tracker_RE_set))
-        change_icon(ui_state, "r_tragus", get_status(dashboard.tracker_RE_set))
+        if dashboard.head_visible:
+            path_head = str(IMAGES_DIR / 'visibilities_markers_icon/head_icon_green.png') 
+        else:
+            path_head = str(IMAGES_DIR / 'visibilities_markers_icon/head_icon.png')
+        change_image(ui_state, "head", path_head)
+
+        if dashboard.coil_visible:
+            path_coil = str(IMAGES_DIR / 'visibilities_markers_icon/coil_no_handle_icon_green.png') 
+        else:
+            path_coil = str(IMAGES_DIR / 'visibilities_markers_icon/coil_no_handle_icon.png')
+        change_image(ui_state, "coil", path_coil)
+
+        status = get_status(dashboard.image_fiducials)
+        change_color(ui_state, "image_fiducials", status)
+        change_radio_icon(ui_state, "image_fiducials", status)
+
+        status = get_status(dashboard.tracker_fiducials)
+        change_color(ui_state, "tracker_fiducials", status)
+        change_radio_icon(ui_state, "tracker_fiducials", status)
 
         change_color(ui_state, "target", get_status(dashboard.target_set))
         change_color(ui_state, "moving", get_status(dashboard.robot_moving))
         change_color(ui_state, "coil", get_status(dashboard.at_target))
-        # change_color(ui_state, "trials", get_status(dashboard.trials_started))
-
 
     def update_indicators(self, ui_state):
         """Update all dashboard indicators."""
         dashboard = self.dashboard
         change_label(ui_state, "distance", str(round(dashboard.module_displacement, 2)) + " mm")
-        change_label(ui_state, "force", str(round(dashboard.force, 2)) + " N")
+        change_progress_ui(ui_state, "force_indicator", round(dashboard.force, 2))
 
     def update_displacement_plot(self, ui_state):
         """Update displacement plot with current history data.
@@ -81,62 +94,97 @@ class UpdateDashboard:
         y_data = list(dashboard.displacement_history_y)
         z_data = list(dashboard.displacement_history_z)
         
-        # Clear and redraw the plot
-        ax = ui_state.displacement_ax
-        if ax is None:
+        if ui_state.displacement_plot is None:
             return
-        ax.clear()
+
+        # Update existing Plotly traces in-place
+        ui_state.displacement_plot.figure.data[0].x = time_data
+        ui_state.displacement_plot.figure.data[0].y = x_data
+        ui_state.displacement_plot.figure.data[1].x = time_data
+        ui_state.displacement_plot.figure.data[1].y = y_data
+        ui_state.displacement_plot.figure.data[2].x = time_data
+        ui_state.displacement_plot.figure.data[2].y = z_data
         
-        # Plot the three lines
-        ax.plot(time_data, x_data, color='#ef4444', linewidth=2.5, label='X axis')
-        ax.plot(time_data, y_data, color='#10b981', linewidth=2.5, label='Y axis')
-        ax.plot(time_data, z_data, color='#3b82f6', linewidth=2.5, label='Z axis')
-        
-        # Restore styling
-        ax.set_xlabel('Time (s)', fontsize=10)
-        ax.set_ylabel('Displacement (mm)', fontsize=10)
-        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
-        ax.set_facecolor('#fafafa')
-        ax.legend(loc='upper right', fontsize=9, framealpha=0.9)
-        
-        # Update the plot widget
-        if ui_state.displacement_plot:
-            ui_state.displacement_plot.update()
+        # Force auto-range to handle sliding window
+        ui_state.displacement_plot.figure.layout.xaxis.autorange = True
+        ui_state.displacement_plot.update()
     
-    def update_mep_plot(self, ui_state, num_windows=5):
-        """Update MEP plot with current history data.
-        
-        Args:
-            ui_state: DashboardUI instance
-        """
+    def update_rotation_plot(self, ui_state):
+        """Update rotation plot with current history data (rx, ry, rz in degrees)."""
 
         dashboard = self.dashboard
         
-        # Aplicar baseline entre 5-20ms
+        # Convert deques to lists for plotting
+        time_data = list(dashboard.rotation_time_history)
+        rx_data = list(dashboard.rotation_history_rx)
+        ry_data = list(dashboard.rotation_history_ry)
+        rz_data = list(dashboard.rotation_history_rz)
+        
+        if ui_state.rotation_plot is None:
+            return
+
+        # Update existing Plotly traces in-place
+        ui_state.rotation_plot.figure.data[0].x = time_data
+        ui_state.rotation_plot.figure.data[0].y = rx_data
+        ui_state.rotation_plot.figure.data[1].x = time_data
+        ui_state.rotation_plot.figure.data[1].y = ry_data
+        ui_state.rotation_plot.figure.data[2].x = time_data
+        ui_state.rotation_plot.figure.data[2].y = rz_data
+        
+        # Force auto-range to handle sliding window
+        ui_state.rotation_plot.figure.layout.xaxis.autorange = True
+        ui_state.rotation_plot.update()
+    
+    def update_mep_plot(self, ui_state, num_windows=5):
+        """Update MEP plot with current history data using Plotly."""
+        
+        dashboard = self.dashboard
+        if ui_state.mep_plot is None:
+            return
+            
+        # Obter dados
         t_min_ms = self.emg_connection.t_min * 1000
         t_max_ms = self.emg_connection.t_max * 1000
         
-        mep_history = dashboard.mep_history_baseline[-num_windows:]
+        # Se não houver dados, não faz nada
+        if not dashboard.mep_history_baseline:
+            return
+            
+        mep_history = list(dashboard.mep_history_baseline)[-num_windows:]
 
-        ax = ui_state.mep_ax
-        ax.clear()
-
+        # Eixo X
         t_ms = np.linspace(t_min_ms, t_max_ms, len(mep_history[0]))
-
-        ax.set_xlabel('Time (ms)', fontsize=10)
-        ax.set_ylabel('MEP amplitude (uV)', fontsize=10)
-        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
-        ax.set_facecolor('#fafafa')
-
+        
+        traces = []
+        
+        # Histórico (cinza)
         for i, mep in enumerate(mep_history[:-1]):
-            ax.plot(t_ms, mep, color='gray', alpha=0.5, linewidth=2.5, label='Trial' if i == 0 else None)
-        
-        ax.plot(t_ms, mep_history[-1], color='#ef4444', alpha=1, linewidth=2.5, label='Last')
-        ax.legend(loc='upper right', fontsize=9, framealpha=0.9)
-        
-        # Update the plot widget
-        if ui_state.mep_plot:
-            ui_state.mep_plot.update()
+            traces.append(go.Scatter(
+                x=t_ms, y=mep,
+                mode='lines',
+                line=dict(color='rgba(128, 128, 128, 0.5)', width=1.5),
+                showlegend=False,
+                hoverinfo='skip', # Otimização: ignora hover no histórico
+                name=f'Trial {i}'
+            ))
+            
+        # Último (vermelho destaque)
+        if len(mep_history) > 0:
+            traces.append(go.Scatter(
+                x=t_ms, y=mep_history[-1],
+                mode='lines',
+                line=dict(color='#dc2626', width=3),
+                name='Last Response',
+                showlegend=False # Sem legenda para manter limpo, ou True se quiser
+            ))
+            
+        # Atualiza figura
+        # Substituímos a figura inteira para evitar o erro de validação do Plotly
+        # "The data property of a figure may only be assigned..."
+        # Mantemos o layout original
+        ui_state.mep_plot.figure = go.Figure(data=traces, layout=ui_state.mep_plot.figure.layout)
+        # Força update
+        ui_state.mep_plot.update()
 
     def update_buttons(self, ui_state):
         dashboard = self.dashboard

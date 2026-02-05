@@ -171,7 +171,7 @@ def create_experiment_form(dashboard: DashboardState, button_label: str = 'Confi
         dialog.open()
     
     # Simple button to open dialog
-    btn = ui.button(button_label, on_click=show_experiment_dialog, icon='settings').props('outline')
+    btn = ui.button(button_label, on_click=show_experiment_dialog, icon='settings').props('flat')
     if not header_mode:
         btn.style('margin-bottom: 16px;')
 
