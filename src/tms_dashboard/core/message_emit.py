@@ -1,3 +1,5 @@
+import time
+
 from tms_dashboard.constants import BrainTargetModel
 from tms_dashboard.utils.signal_processing import p2p_from_time
 
@@ -20,14 +22,25 @@ class Message2Server():
         return self.__send_message2navigation(topic='Create marker')
     
     def free_drive_robot(self):
-        return self.__send_message2robot(topic='Neuronavigation to Robot: Set free drive', data= {'set': not self.dashboard.free_drive_robot_pressed})
+        self.check_robot_connection()
+        if self.dashboard.robot_set:
+            return self.__send_message2robot(topic='Neuronavigation to Robot: Set free drive', data= {'set': not self.dashboard.free_drive_robot_pressed})
+        return False
 
     def move_upward_robot(self):
-        return self.__send_message2navigation(topic='Press move away button', data= {'pressed': not self.dashboard.move_upward_robot_pressed})
-
+        self.check_robot_connection()
+        if self.dashboard.robot_set:
+            return self.__send_message2navigation(topic='Press move away button', data= {'pressed': not self.dashboard.move_upward_robot_pressed})
+        return False
     def active_robot(self):
-        return self.__send_message2navigation(topic="Press robot button", data= {'pressed': not self.dashboard.active_robot_pressed})
+        self.check_robot_connection()
+        if self.dashboard.robot_set:
+            return self.__send_message2navigation(topic="Press robot button", data= {'pressed': not self.dashboard.active_robot_pressed})
+        return False
     
+    def check_robot_connection(self):
+        self.__send_message2robot(topic="Neuronavigation to Robot: Check connection robot")
+
     def send_mep_value(self, series_meps: list):
         if self.dashboard.at_target:
             targets = []
