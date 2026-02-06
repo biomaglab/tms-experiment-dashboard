@@ -17,14 +17,17 @@ from tms_dashboard.core.message_handler import MessageHandler
 from tms_dashboard.core.message_emit import Message2Server
 from tms_dashboard.nicegui_app.update_dashboard import UpdateDashboard
 from tms_dashboard.nicegui_app.ui import create_header, create_dashboard_tabs
+from tms_dashboard.nicegui_app.client_manager import ClientManager
+from tms_dashboard.nicegui_app.ui_state import DashboardUI
 
 # Global shared instances (persist across all sessions)
+client_manager = ClientManager()
 dashboard = DashboardState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
-message_handler = MessageHandler(socket_client, dashboard)
-neuroone_connection = neuroOne(num_trial=20, t_min=-10, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
-update_dashboard = UpdateDashboard(dashboard, neuroone_connection)
 message_emit = Message2Server(socket_client, dashboard)
+message_handler = MessageHandler(socket_client, dashboard, message_emit)
+neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
+update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manager)
 
 # Flag to ensure background thread starts only once
 _background_thread_started = False
@@ -47,7 +50,6 @@ def start_background_services():
         while True:
             try:
                 time.sleep(0.1)
-                update_dashboard.update()
                 message_handler.process_messages()
 
                 if neuroone_connection.get_connection() and neuroone_connection.get_status():
@@ -57,12 +59,15 @@ def start_background_services():
                                                 neuroone_connection.t_min,
                                                 neuroone_connection.t_max,
                                                 dashboard.mep_sampling_rate)
-                    if dashboard.status_new_mep:
-                        new_meps_only = [dashboard.mep_history_baseline[i] for i in dashboard.new_meps_index]
-                        message_emit.send_mep_value(new_meps_only)
                 else:
                     if dashboard.get_all_state_mep():
                         dashboard.reset_all_state_mep()
+                
+                update_dashboard.update()
+                if dashboard.status_new_mep:
+                    new_meps_only = [dashboard.mep_p2p_history_baseline[i] for i in dashboard.new_meps_index]
+                    message_emit.send_mep_value(new_meps_only)
+
                     
             except Exception as e:
                 print("Error processing messages", e)
@@ -90,6 +95,7 @@ def index():
         <style>
             :root {
                 --nicegui-default-gap: 0;
+                --nicegui-default-padding: 0.5rem;
             }
             body {
                 margin: 0 !important;
@@ -98,9 +104,16 @@ def index():
         </style>
     ''')
     
-    # Build UI using shared dashboard instance
+    # Create per-session UI state
+    ui_state = DashboardUI()
+    client_manager.register(ui_state)
+    
+    # Register cleanup on disconnect
+    ui.context.client.on_disconnect(lambda: client_manager.unregister(ui_state))
+
+    # Build UI using shared dashboard instance and per-session UI state
     create_header(dashboard, message_emit)
-    create_dashboard_tabs(dashboard, message_emit)
+    create_dashboard_tabs(dashboard, message_emit, ui_state)
 
 
 def main():
@@ -117,3 +130,9 @@ def main():
         title="TMS Dashboard",
         favicon="🧠"
     )
+
+
+if __name__ == "__main__":
+    print("🚀 Starting TMS Dashboard with NiceGUI...")
+    print(f"📡 Acess: http://localhost:{NICEGUI_PORT}")
+    main()

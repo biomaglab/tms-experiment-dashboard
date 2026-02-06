@@ -121,7 +121,6 @@ class SocketClient:
         try:
             # emit is thread-safe in python-socketio
             self.__sio.emit(event, msg)
-            print(f"[SocketClient] Emitted event '{event}' with msg: {msg}")
             return True
         except Exception as e:
             print(f"[SocketClient] Error emitting event '{event}': {e}")
