@@ -6,26 +6,29 @@ import threading
 import time
 from nicegui import ui
 import traceback
-import numpy as np
 
 from tms_dashboard.config import DEFAULT_HOST, DEFAULT_PORT, NICEGUI_PORT
 from tms_dashboard.constants import TriggerType
+
 from tms_dashboard.core.dashboard_state import DashboardState
+from tms_dashboard.core.robot_config_state import RobotConfigState
 from tms_dashboard.core.modules.socket_client import SocketClient
 from tms_dashboard.core.modules.emg_connection import neuroOne
 from tms_dashboard.core.message_handler import MessageHandler
 from tms_dashboard.core.message_emit import Message2Server
 from tms_dashboard.nicegui_app.update_dashboard import UpdateDashboard
-from tms_dashboard.nicegui_app.ui import create_header, create_dashboard_tabs
 from tms_dashboard.nicegui_app.client_manager import ClientManager
 from tms_dashboard.nicegui_app.ui_state import DashboardUI
+
+from tms_dashboard.nicegui_app.ui import create_header, create_dashboard_tabs
 
 # Global shared instances (persist across all sessions)
 client_manager = ClientManager()
 dashboard = DashboardState()
+robot_config = RobotConfigState()
 socket_client = SocketClient(f"http://{DEFAULT_HOST}:{DEFAULT_PORT}")
 message_emit = Message2Server(socket_client, dashboard)
-message_handler = MessageHandler(socket_client, dashboard, message_emit)
+message_handler = MessageHandler(socket_client, dashboard, robot_config, message_emit)
 neuroone_connection = neuroOne(num_trial=20, t_min=-5, t_max=40, ch=33, trigger_type_interest=TriggerType.STIMULUS)
 update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manager)
 
@@ -112,7 +115,7 @@ def index():
     ui.context.client.on_disconnect(lambda: client_manager.unregister(ui_state))
 
     # Build UI using shared dashboard instance and per-session UI state
-    create_header(dashboard, message_emit)
+    create_header(dashboard, robot_config, message_emit)
     create_dashboard_tabs(dashboard, message_emit, ui_state)
 
 

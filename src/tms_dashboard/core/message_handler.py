@@ -5,14 +5,16 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from typing import Optional
+
 from src.tms_dashboard.core.dashboard_state import DashboardState
 from src.tms_dashboard.core.modules.socket_client import SocketClient
 from src.tms_dashboard.core.message_emit import Message2Server
+from src.tms_dashboard.core.robot_config_state import RobotConfigState
 
 class MessageHandler:
     """Processes messages from socket client and updates dashboard state."""
     
-    def __init__(self, socket_client: SocketClient, dashboard_state: DashboardState, message_emit: Message2Server):
+    def __init__(self, socket_client: SocketClient, dashboard_state: DashboardState, robot_state: RobotConfigState, message_emit: Message2Server):
         """Initialize message handler.
         
         Args:
@@ -22,11 +24,9 @@ class MessageHandler:
         self.socket_client = socket_client
         self.dashboard = dashboard_state
         self.message_emit = message_emit
+        self.robot_state = robot_state 
+
         self.target_status = None
-        self.distance_0 = 0
-        self.distance_x = 0
-        self.distance_y = 0
-        self.distance_z = 0
     
     def process_messages(self) -> Optional[dict]:
         """Process all messages in buffer and update dashboard state.
@@ -166,6 +166,9 @@ class MessageHandler:
             case "Press robot button":
                 pressed = data['pressed']
                 self.dashboard.active_robot_pressed = pressed
+
+            case "Robot to Neuronavigation: Initial config":
+                self.robot_state.sync_from_embedded(data['config'])
 
     def _handle_image_fiducial(self, data):
         """Handle image fiducial setting/unsetting."""

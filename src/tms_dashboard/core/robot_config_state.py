@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Robot configuration state management"""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import Tuple
 
 # Available options for select fields
@@ -107,16 +107,6 @@ class RobotConfigState:
             'stop_robot_if_head_not_visible': self.stop_robot_if_head_not_visible,
             'wait_for_keypress_before_movement': self.wait_for_keypress_before_movement,
             'verbose': self.verbose,
-            'pid_translation': {
-                'x': self.pid_x.to_dict(),
-                'y': self.pid_y.to_dict(),
-                'z': self.pid_z.to_dict(),
-            },
-            'pid_rotation': {
-                'rx': self.pid_rx.to_dict(),
-                'ry': self.pid_ry.to_dict(),
-                'rz': self.pid_rz.to_dict(),
-            }
         }
     
     @classmethod
@@ -140,12 +130,6 @@ class RobotConfigState:
             stop_robot_if_head_not_visible=data.get('stop_robot_if_head_not_visible', True),
             wait_for_keypress_before_movement=data.get('wait_for_keypress_before_movement', False),
             verbose=data.get('verbose', False),
-            pid_x=PIDParams.from_dict(pid_trans.get('x', {})),
-            pid_y=PIDParams.from_dict(pid_trans.get('y', {})),
-            pid_z=PIDParams.from_dict(pid_trans.get('z', {})),
-            pid_rx=PIDParams.from_dict(pid_rot.get('rx', {})),
-            pid_ry=PIDParams.from_dict(pid_rot.get('ry', {})),
-            pid_rz=PIDParams.from_dict(pid_rot.get('rz', {})),
         )
     
     def validate(self) -> Tuple[bool, str]:
@@ -173,3 +157,11 @@ class RobotConfigState:
             return False, "Rotation threshold must be positive"
         
         return True, ""
+    
+    def sync_from_embedded(self, data: dict) -> None:
+        """Synchronize state from embedded system (no validation)."""
+        valid_fields = {f.name for f in fields(self)}
+
+        for key, value in data.items():
+            if key in valid_fields:
+                setattr(self, key, value)

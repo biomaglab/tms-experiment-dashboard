@@ -50,6 +50,9 @@ class Message2Server():
             
             self.__send_message2navigation(topic="Set brain targets", data={'brain_targets': targets})
         self.dashboard.status_new_mep = False
+
+    def request_robot_config(self):
+        self.__send_message2robot(topic="Neuronavigation to Robot: Request config")
     
     def send_robot_config(self, robot_config):
         """Send robot configuration to the robot control system.
@@ -60,10 +63,10 @@ class Message2Server():
         Returns:
             bool: True if message was sent successfully
         """
-        # self.__send_message2robot(
-        #     topic='Neuronavigation to Robot: Update config', 
-        #     data=robot_config.to_dict()
-        # )
+        self.__send_message2robot(
+            topic='Neuronavigation to Robot: Update config', 
+            data=robot_config.to_dict()
+        )
 
         # self.__send_message2robot(
         #     topic='Neuronavigation to Robot: Update pid values', 

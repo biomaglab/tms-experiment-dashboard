@@ -4,21 +4,20 @@
 
 from nicegui import ui
 
-from tms_dashboard.nicegui_app.ui.widgets.exp_logger_dialog import open_config
-from tms_dashboard.nicegui_app.ui.widgets.robot_dialog import open_robot_config
-from tms_dashboard.config import IMAGES_DIR, CSV_PATH
 from tms_dashboard.core.dashboard_state import DashboardState
-from tms_dashboard.core.data_logger import DataLogger
+from tms_dashboard.core.robot_config_state import RobotConfigState
+from tms_dashboard.config import IMAGES_DIR
+
+from tms_dashboard.nicegui_app.ui.widgets.robot_dialog import open_robot_config
 from tms_dashboard.nicegui_app.ui.experiment_form import create_experiment_form
 from tms_dashboard.nicegui_app.ui.checklist_tab import create_checklist_tab
 
-def create_header(dashboard: DashboardState, message_emit=None):
+def create_header(dashboard: DashboardState, robot_config: RobotConfigState, message_emit=None):
     """Create clean minimal header with working experiment config dialog.
     
     Args:
         dashboard: DashboardState instance
     """
-    logger = DataLogger(CSV_PATH)
     
     # Header row
     with ui.row().classes('w-full items-center justify-between').style(
@@ -40,7 +39,7 @@ def create_header(dashboard: DashboardState, message_emit=None):
         # Right side: Experiment Description button and Checklist button (grouped)
         with ui.row().classes('items-center gap-2'):
 
-            ui.button('Configure Robot', on_click=lambda: open_robot_config(dashboard, message_emit), icon='settings').props('flat').style(
+            ui.button('Configure Robot', on_click=lambda: open_robot_config(robot_config, message_emit), icon='settings').props('flat').style(
                 'font-weight: 500; color: #6b7280;'
             )
             # Experiment Description opens the experiment form dialog (renamed from 'Configure Experiment')

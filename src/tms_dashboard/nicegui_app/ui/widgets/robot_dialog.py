@@ -3,7 +3,10 @@
 """Robot configuration dialog widget."""
 
 from nicegui import ui
+import asyncio
+
 from tms_dashboard.core.dashboard_state import DashboardState
+from tms_dashboard.core.message_emit import Message2Server
 from tms_dashboard.core.robot_config_state import (
     RobotConfigState, 
     PIDParams,
@@ -11,11 +14,7 @@ from tms_dashboard.core.robot_config_state import (
 )
 
 
-# Global robot config instance
-robot_config = RobotConfigState()
-
-
-async def open_robot_config(dashboard: DashboardState, message_emit=None):
+async def open_robot_config(robot_config: RobotConfigState, message_emit: Message2Server):
     """Open robot configuration dialog.
     
     Args:
@@ -23,8 +22,9 @@ async def open_robot_config(dashboard: DashboardState, message_emit=None):
         message_emit: Message2Server instance for sending config to neuronavigation
     """
     
-    global robot_config
-    
+    message_emit.request_robot_config()
+    await asyncio.sleep(1)
+
     with ui.dialog().props('persistent') as dialog:
         with ui.card().style('width: 950px; max-width: 95vw; max-height: 90vh; overflow-y: auto;'):
             # Dialog header
@@ -196,7 +196,6 @@ async def open_robot_config(dashboard: DashboardState, message_emit=None):
             # ===== Action Buttons =====
             def save_config():
                 """Save configuration and optionally send to neuronavigation."""
-                global robot_config
                 
                 # Update robot_config from inputs
                 robot_config.use_force_sensor = inputs['use_force_sensor'].value
