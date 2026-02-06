@@ -121,19 +121,16 @@ class MessageHandler:
                         
                         # Check if it's a 4x4 transformation matrix
                         if target_matrix.shape == (4, 4):
-
-                            R_mat = target_matrix[:3, :3]
-
-                            rot = R.from_matrix(R_mat)
-
-                            # alpha (X), beta (Y), gamma (Z)
-                            alpha, beta, gamma = rot.as_euler('xyz', degrees=True)
+                            # Extract position from matrix (X, Y, Z)
+                            x, y, z = target_matrix[0, 3], target_matrix[1, 3], target_matrix[2, 3]
                             
-                            # Store as tuple [x, y, z, rx, ry, rz]
-                            self.dashboard.target_location = (
-                                target_matrix[1][3], -target_matrix[2][3], -target_matrix[0][3],
-                                alpha,beta,gamma
-                            )
+                            # Extract rotation using sxyz Euler (same as InVesalius uses)
+                            rot = R.from_matrix(target_matrix[:3, :3])
+                            rx, ry, rz = rot.as_euler('xyz', degrees=False)  # radians
+                            
+                            # Store in InVesalius coordinate system (same as displacement)
+                            # Three.js transformation will be applied in navigation_3d.py
+                            self.dashboard.target_location = (x, y, z, rx, ry, rz)
 
                 case "Neuronavigation to Robot: Unset target":
                     self.dashboard.target_set = False
@@ -223,8 +220,25 @@ class MessageHandler:
 
     def _handle_displacement(self, data):
         """Handle displacement to target update."""
-        self.dashboard.displacement = list(map(lambda x: data['displacement'][x], range(6)))
-        self.dashboard.module_displacement = round(np.linalg.norm(self.dashboard.displacement[:3]),2)
+        displacement = list(map(lambda x: data['displacement'][x], range(6)))
+        self.dashboard.displacement = displacement
+        self.dashboard.module_displacement = round(np.linalg.norm(displacement[:3]), 2)
+
+        # Compute coil location from target + displacement
+        # This ensures coil and target are in the same coordinate system
+        if self.dashboard.target_set:
+            target = self.dashboard.target_location
+            # Displacement is (dx, dy, dz, drx, dry, drz)
+            # Position: add directly (same units - mm)
+            # Rotation: displacement angles are in degrees, convert to radians
+            self.dashboard.coil_location = (
+                target[0] + displacement[0],
+                target[1] + displacement[1],
+                target[2] + displacement[2],
+                target[3] + np.radians(displacement[3]),
+                target[4] + np.radians(displacement[4]),
+                target[5] + np.radians(displacement[5]),
+            )
 
         # Update displacement history for plotting
         self.dashboard.add_displacement_sample()
