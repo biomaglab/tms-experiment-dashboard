@@ -81,6 +81,8 @@ class DashboardState:
         self.rotation_history_rz = deque(maxlen=self.max_history_length)
         self.rotation_time_history = deque(maxlen=self.max_history_length)
 
+        self.trigged_times = deque(maxlen=self.max_history_length)
+
         # Motor evoked potentials plots and history
         # UI-specific plots are now in DashboardUI (per client)
         self.mep_history = []
@@ -88,6 +90,7 @@ class DashboardState:
         self.mep_p2p_history_baseline = []
         self.mep_sampling_rate = None
         self.status_new_mep = False
+        self.status_new_mep_2 = False
         self.new_meps_index = []
         
         # Experiment metadata with default values
@@ -149,6 +152,10 @@ class DashboardState:
         self.rotation_history_ry.append(float(self.displacement[4]))
         self.rotation_history_rz.append(float(self.displacement[5]))
         self.rotation_time_history.append(elapsed_time)
+        
+        if self.status_new_mep_2:
+            self.trigged_times.append(elapsed_time)
+            self.status_new_mep_2 = False
 
     def update_mep_history(self, new_mep_history, t_min, t_max, sampling_rate):
         if len(new_mep_history) == 0:
@@ -168,7 +175,7 @@ class DashboardState:
                                 sampling_rate=sampling_rate
                             )
         self.mep_p2p_history_baseline = [p2p_from_time(mep, self.mep_sampling_rate, t_min) for mep in self.mep_history_baseline]
-        self.status_new_mep = True
+        self.status_new_mep = self.status_new_mep_2 = True
     
     def get_all_state_mep(self):
         if self.mep_history == [] and self.mep_history_baseline == [] and self.mep_sampling_rate == None and self.status_new_mep == False and self.new_meps_index == []:

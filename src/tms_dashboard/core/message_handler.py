@@ -85,45 +85,30 @@ class MessageHandler:
             case 'Neuronavigation to Robot: Update displacement to target':
                 self._handle_displacement(data)
 
-                self.dashboard.navigation_button_pressed = True
-                self.dashboard.target_set = True
-                self.dashboard.image_fiducials = True
-                self.dashboard.tracker_fiducials = True
-            
-            case 'Tracker fiducials set':
-                self.dashboard.tracker_fiducials = True
-            
-            case 'Reset tracker fiducials':
-                self.dashboard.tracker_fiducials = False
-            
-            case "Robot to Neuronavigation: Robot connection status":
-                self.dashboard.robot_set = True if data['data'] == 'Connected' else False
-            
-            case 'Open navigation menu':
-                self.dashboard.matrix_set = True
-            
-            case "Neuronavigation to Robot: Set target":
-                self.dashboard.target_set = True
+                    self.dashboard.navigation_button_pressed = True
+                    self.dashboard.target_set = True
+                    self.dashboard.image_fiducials = True
+                    self.dashboard.tracker_fiducials = True
                 
-                # Extract target position from transformation matrix
-                if 'target' in data:
-                    target_matrix = np.array(data['target'])
+                case 'Tracker fiducials set':
+                    self.dashboard.tracker_fiducials = True
+                
+                case 'Reset tracker fiducials':
+                    self.dashboard.tracker_fiducials = False
+                
+                case "Robot to Neuronavigation: Robot connection status":
+                    self.dashboard.robot_set = True if data['data'] == 'Connected' else False
+                
+                case 'Open navigation menu':
+                    self.dashboard.matrix_set = True
+                
+                case "Neuronavigation to Robot: Set target":
+                    self.dashboard.target_set = True
                     
-                    # Check if it's a 4x4 transformation matrix
-                    if target_matrix.shape == (4, 4):
-
-                        R_mat = target_matrix[:3, :3]
-
-                        rot = R.from_matrix(R_mat)
-
-                        # alpha (X), beta (Y), gamma (Z)
-                        alpha, beta, gamma = rot.as_euler('xyz', degrees=True)
-                        
-                        # Store as tuple [x, y, z, rx, ry, rz]
-                        self.dashboard.target_location = (
-                            target_matrix[1][3], -target_matrix[2][3], -target_matrix[0][3],
-                            alpha,beta,gamma
-                        )
+                    # Extract target position from transformation matrix
+                    if 'target' in data:
+                        target_matrix = np.array(data['target'])
+                        self._handle_target_position(target_matrix)
 
             case "Neuronavigation to Robot: Unset target":
                 self.dashboard.target_set = False
@@ -218,4 +203,18 @@ class MessageHandler:
 
         # Update displacement history for plotting
         self.dashboard.add_displacement_sample()
+    
+    def _handle_target_position(self, target_matrix):
+        # Check if it's a 4x4 transformation matrix
+        if target_matrix.shape == (4, 4):
+            # Extract position from matrix (X, Y, Z)
+            x, y, z = target_matrix[0, 3], target_matrix[1, 3], target_matrix[2, 3]
+            
+            # Extract rotation using sxyz Euler (same as InVesalius uses)
+            rot = R.from_matrix(target_matrix[:3, :3])
+            rx, ry, rz = rot.as_euler('xyz', degrees=False)  # radians
+            
+            # Store in InVesalius coordinate system (same as displacement)
+            # Three.js transformation will be applied in navigation_3d.py
+            self.dashboard.target_location = (x, y, z, rx, ry, rz)
 
