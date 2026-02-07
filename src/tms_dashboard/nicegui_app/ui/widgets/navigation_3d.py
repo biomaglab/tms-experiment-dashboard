@@ -41,12 +41,14 @@ def create_3d_scene_with_models(dashboard: DashboardState):
 
     # Full height scene - fills parent container
     with ui.scene().classes('w-full h-full') as scene:
+        # scene.run_method('cameraControls.enabled = false')
         # Head model - positioned at origin (head coordinates)
         # Static reference - doesn't move, just for visual context
         head_url = '/static/objects/head.stl'
-        head_stl = scene.stl(head_url).scale(SCALE * 0.8).material('#f0d5a0', opacity=0.4)
+        head_stl = scene.stl(head_url).scale(SCALE * 1.95).material("#949494", opacity=0.9)
         # Rotate head to stand upright: X rotation of -90° (occipital was facing ground)
-        head_stl.move(0, 0, 0).rotate(-math.pi/2, 0, 0)
+        head_stl.move(0, 0, 1).rotate(math.pi/2, 0, -math.pi/10)
+        #-math.pi/2
         
         # Coil model - will move based on displacement
         coil_path = '/static/objects/magstim_fig8_coil.stl'
@@ -56,8 +58,6 @@ def create_3d_scene_with_models(dashboard: DashboardState):
         # This will be positioned when target is set
         coil_path = '/static/objects/aim.stl'
         target_marker_stl = scene.stl(coil_path).scale(SCALE).material('#ff0000', opacity=0.5)
-
-        CoordinateSystem('origin')
         
         # Timer to update object positions from dashboard state
         def update_positions():
@@ -101,7 +101,7 @@ def create_3d_scene_with_models(dashboard: DashboardState):
                 coil_stl.rotate(coil_rx, coil_ry, coil_rz)
                 
                 # Dynamic camera: perpendicular to target plane (like InVesalius)
-                min_distance = 1.5
+                min_distance = 2
                 max_distance = 12.0
                 displacement_mm = dashboard.module_displacement
                 normalized_displacement = min(1.0, displacement_mm / 150.0)
