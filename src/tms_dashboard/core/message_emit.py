@@ -52,6 +52,7 @@ class Message2Server():
         self.dashboard.status_new_mep = False
 
     def request_robot_config(self):
+        self.check_robot_connection()
         self.__send_message2robot(topic="Neuronavigation to Robot: Request config")
     
     def send_robot_config(self, robot_config):

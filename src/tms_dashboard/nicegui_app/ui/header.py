@@ -39,7 +39,7 @@ def create_header(dashboard: DashboardState, robot_config: RobotConfigState, mes
         # Right side: Experiment Description button and Checklist button (grouped)
         with ui.row().classes('items-center gap-2'):
 
-            ui.button('Configure Robot', on_click=lambda: open_robot_config(robot_config, message_emit), icon='settings').props('flat').style(
+            ui.button('Configure Robot', on_click=lambda: open_robot_config(robot_config, message_emit, dashboard), icon='settings').props('flat').style(
                 'font-weight: 500; color: #6b7280;'
             )
             # Experiment Description opens the experiment form dialog (renamed from 'Configure Experiment')
