@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 """3D Navigation visualization component"""
 
+from scipy.spatial.transform import Rotation as R
 from nicegui import ui
 import math
+
 from tms_dashboard.core.dashboard_state import DashboardState
-from tms_dashboard.utils.coordinate_transform import InVesaliusToThreeJS
+from tms_dashboard.config import OBJECTS_DIR
+
+from tms_dashboard.utils.coordinate_transform import compute_relative_pose
 
 class CoordinateSystem(ui.scene.group):
-
     def __init__(self, name: str, *, length: float = 1.0) -> None:
         super().__init__()
 
@@ -36,83 +39,104 @@ def create_3d_scene_with_models(dashboard: DashboardState):
 
     SCALE = 0.012
 
-    # Full height scene - fills    # Create container for 3D scene
-    with ui.column().classes('w-full h-full').style('position: relative; overflow: hidden; display: flex; flex-direction: column; flex: 1;'):
-        ui.label('Navigation').style('font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: #4b5563;')
-        with ui.column().style("position: relative; width: 100%; height: calc(100% - 24px); border: 1px solid #e5e7eb; border-radius: 8px; background-color: white; overflow: hidden;"):
-            # Static Overlay Label example
-            distance_label = ui.label(f'Distance: {dashboard.module_displacement} mm').style(
-                'position: absolute; top: 10px; left: 10px; z-index: 10; '
-                'background-color: transparent; padding: 8px 12px; '
-                'font-size: 1.1rem; font-weight: 450; color: #374151;'
-            )
+    # Full height scene - fills parent container
+    with ui.scene().classes('w-full h-full') as scene:
+        # scene.run_method('cameraControls.enabled = false')
+        # Head model - positioned at origin (head coordinates)
+        # Static reference - doesn't move, just for visual context
+        head_url = '/static/objects/head.stl'
+        head_stl = scene.stl(head_url).scale(SCALE * 1.95).material("#949494", opacity=0.9)
+        # Rotate head to stand upright: X rotation of -90° (occipital was facing ground)
+        head_stl.move(0, 0, 1).rotate(math.pi/2, 0, -math.pi/10)
+        #-math.pi/2
+        
+        # Coil model - will move based on displacement
+        coil_path = '/static/objects/magstim_fig8_coil.stl'
+        coil_stl = scene.stl(coil_path).scale(SCALE).material('gray', opacity=0.5)
+  
+        # Target marker - visual indicator of target position
+        # This will be positioned when target is set
+        coil_path = '/static/objects/aim.stl'
+        target_marker_stl = scene.stl(coil_path).scale(SCALE).material('#ff0000', opacity=0.5)
+        
+        # Timer to update object positions from dashboard state
+        def update_positions():
+            if dashboard.target_set:
+                # Get target location: (x, y, z, rx, ry, rz) in InVesalius coords
+                target = dashboard.target_location
+                displacement = dashboard.displacement
+                
+                # Convert InVesalius Z-up to Three.js Y-up:
+                # InVesalius: X=right, Y=front, Z=up
+                # Three.js:   X=right, Y=up, Z=front
+                # Mapping: X_threejs = X_inv, Y_threejs = Z_inv, Z_threejs = -Y_inv
+                
+                # Target position (convert coords and scale)
+                target_x = target[0] * SCALE
+                target_y = target[2] * SCALE        # Z becomes Y (up)
+                target_z = -target[1] * SCALE       # -Y becomes Z
+                
+                # Target rotation (axis swap)
+                target_rx = target[3]               # X rotation (already radians)
+                target_ry = target[5]               # Z rotation becomes Y
+                target_rz = -target[4]              # -Y rotation becomes Z
+                
+                # Position and rotate target
+                target_marker_stl.move(target_x, target_y, target_z)
+                target_marker_stl.rotate(target_rx, target_ry, target_rz)
+                target_marker_stl.material(color="yellow", opacity=1)
+                
+                # Coil position = target position + displacement (with same conversion)
+                # Displacement is (dx, dy, dz) in mm, (drx, dry, drz) in degrees
+                coil_x = target_x + displacement[0] * SCALE
+                coil_y = target_y + displacement[2] * SCALE        # Z becomes Y
+                coil_z = target_z + (-displacement[1]) * SCALE     # -Y becomes Z
+                
+                # Coil rotation = target rotation + displacement rotation
+                coil_rx = target_rx + math.radians(displacement[3])
+                coil_ry = target_ry + math.radians(displacement[5])  # Z becomes Y
+                coil_rz = target_rz + (-math.radians(displacement[4]))  # -Y becomes Z
+                
+                coil_stl.move(coil_x, coil_y, coil_z)
+                coil_stl.rotate(coil_rx, coil_ry, coil_rz)
+                
+                # Dynamic camera: perpendicular to target plane (like InVesalius)
+                min_distance = 2
+                max_distance = 12.0
+                displacement_mm = dashboard.module_displacement
+                normalized_displacement = min(1.0, displacement_mm / 150.0)
+                camera_distance = min_distance + (max_distance - min_distance) * normalized_displacement
+                
+                # Get target's rotation matrix to calculate normal vector
+                # The target's Z-axis points outward from brain (coil direction)
+                target_rotation = R.from_euler('xyz', [target_rx, target_ry, target_rz], degrees=False)
+                target_rot_matrix = target_rotation.as_matrix()
+                
+                # Normal vector = target's Z-axis (direction coil faces)
+                # In Three.js Y-up, this is the direction we want to position camera
+                normal_vector = target_rot_matrix[:, 2]  # Z-axis column
+                
+                # Position camera along normal vector, looking back at target
+                camera_x = target_x + normal_vector[0] * camera_distance
+                camera_y = target_y + normal_vector[1] * camera_distance
+                camera_z = target_z + normal_vector[2] * camera_distance
+                
+                scene.move_camera(
+                    x=camera_x,
+                    y=camera_y,
+                    z=camera_z,
+                    look_at_x=target_x,
+                    look_at_y=target_y,
+                    look_at_z=target_z,
+                )
             
-            with ui.row().style("width: calc(100% - 30px); height: calc(100% - 30px); margin: 15px;"):
-                with ui.scene().classes('w-full h-full') as scene:
-                    # Head model - static in scene
-                    head_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/head.stl'
-                    # head = scene.stl(head_url).scale(0.17).move(0, 0, 9).rotate(1.57, 0, -0.3)
-            
-                    # Coil model - will move based on displacement
-                    coil_url = 'https://raw.githubusercontent.com/invesalius/invesalius3/master/navigation/objects/magstim_fig8_coil.stl'
-                    coil_stl = scene.stl(coil_url).scale(SCALE).material('gray', opacity=0.5)
-            
-                    # Target marker - visual indicator of target position
-                    # This will be positioned when target is set
-                    target_marker_stl = scene.sphere(0.2).material('#ff0000', opacity=0.5)
-
-                    CoordinateSystem('origin')
-                    
-                    # Timer to update object positions from dashboard state
-                    def update_positions():
-                        if dashboard.target_set:
-                            distance_label.set_text(f'Distance: {dashboard.module_displacement} mm')
-                            # Calculate relative positions (coil and target relative to head)
-
-                            target_marker_stl.material(color= "yellow", opacity=1)
-                            coil_stl.move(
-                                (dashboard.coil_location[0] - dashboard.head_location[0]) * SCALE,
-                                (dashboard.coil_location[1] - dashboard.head_location[1]) * SCALE,
-                                (dashboard.coil_location[2] - dashboard.head_location[2]) * SCALE)
-                            coil_stl.rotate(
-                                (dashboard.coil_location[3] - dashboard.head_location[3]),
-                                (dashboard.coil_location[4] - dashboard.head_location[4]),
-                                (dashboard.coil_location[5] - dashboard.head_location[5])
-                            )
-
-                            target_x = (dashboard.target_location[0] - dashboard.head_location[0]) * SCALE
-                            target_y = (dashboard.target_location[1] - dashboard.head_location[1]) * SCALE
-                            target_z = (dashboard.target_location[2] - dashboard.head_location[2]) * SCALE
-                            
-                            target_marker_stl.move(target_x, target_y, target_z)
-
-                            target_aplha = (dashboard.target_location[3] - dashboard.head_location[3])
-                            target_beta = (dashboard.target_location[3] - dashboard.head_location[3])
-                            target_gamma = (dashboard.target_location[5] - dashboard.head_location[5])
-
-                            target_marker_stl.rotate(target_aplha, target_beta, target_gamma)
-                            
-                            # Update camera position: centered on target, looking down from above
-                            # Camera height based on module_distance (larger distance = zoom out)
-                            camera_height = dashboard.module_displacement * SCALE * 2  # Scale factor for visual comfort
-                            
-                            # Position camera above target
-                            # scene.move_camera(
-                            #     x=target_x  + camera_height,
-                            #     y=target_y + camera_height, # Above target
-                            #     z=target_z  + camera_height,
-                            #     look_at_x=target_x,  # Look at target
-                            #     look_at_y=target_y,
-                            #     look_at_z=target_z
-                            # )
-                        
-                        else:
-                            # No target - reset to origin
-                            coil_stl.move(-4, 0, 0)
-                            coil_stl.rotate(0,0,0)
-                            target_marker_stl.material(opacity=0)
-                            
-                            # Reset camera to default view
-                            scene.move_camera(x=0, y=2, z=5, look_at_x=0, look_at_y=0, look_at_z=0)
-                    
-                    ui.timer(0.1, update_positions)  # Update at 10 Hz
+            else:
+                # No target - reset to origin
+                coil_stl.move(-4, 0, 0)
+                coil_stl.rotate(0,0,0)
+                target_marker_stl.material(opacity=0)
+                
+                # Reset camera to default view
+                scene.move_camera(x=0, y=2, z=5, look_at_x=0, look_at_y=0, look_at_z=0)
+        
+        ui.timer(0.1, update_positions)  # Update at 10 Hz

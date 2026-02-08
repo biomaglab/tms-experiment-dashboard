@@ -5,6 +5,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from typing import Optional
+import time
 
 from src.tms_dashboard.core.dashboard_state import DashboardState
 from src.tms_dashboard.core.modules.socket_client import SocketClient
@@ -24,9 +25,11 @@ class MessageHandler:
         self.socket_client = socket_client
         self.dashboard = dashboard_state
         self.message_emit = message_emit
+
         self.robot_state = robot_state 
 
         self.target_status = None
+        self.neuronaviagator_status: bool = True
     
     def process_messages(self) -> Optional[dict]:
         """Process all messages in buffer and update dashboard state.
@@ -53,37 +56,47 @@ class MessageHandler:
             data: Message data payload
         """
 
-        match topic:
-            case 'Set image fiducial':
-                self._handle_image_fiducial(data)
-            
-            case 'Reset image fiducials':
-                self.dashboard.image_fiducials = False
-            
-            case 'Project loaded successfully':
-                self.dashboard.project_set = True
-            
-            case 'Close Project':
-                self.dashboard.project_set = False
-            
-            case 'From Neuronavigation: Update tracker poses':
-                self._handle_tracker_poses(data)
+        if self.neuronaviagator_status:
+            match topic:
 
-                if any(data['visibilities']):
-                    self.dashboard.camera_set = True
+                #IMPORTANT: THIS TOPIC MUST BE THE FIRST
+                case 'Exit':
+                    self.neuronaviagator_status = False
+                    self.dashboard.reset_state()
+                    time.sleep(3)
+                    self.socket_client.clear_buffer()
+                    self.neuronaviagator_status = True
 
-                    self.dashboard.probe_visible = data['visibilities'][0]
-                    self.dashboard.head_visible = data['visibilities'][1]
-                    self.dashboard.coil_visible = data['visibilities'][2]
-
-                else:
-                    self.dashboard.camera_set = False
-                    self.dashboard.probe_visible = False
-                    self.dashboard.head_visible = False
-                    self.dashboard.coil_visible = False
+                case 'Set image fiducial':
+                    self._handle_image_fiducial(data)
                 
-            case 'Neuronavigation to Robot: Update displacement to target':
-                self._handle_displacement(data)
+                case 'Reset image fiducials':
+                    self.dashboard.image_fiducials = False
+                
+                case 'Project loaded successfully':
+                    self.dashboard.project_set = True
+                
+                case 'Close Project':
+                    self.dashboard.project_set = False
+                
+                case 'From Neuronavigation: Update tracker poses':
+                    self._handle_tracker_poses(data)
+
+                    if any(data['visibilities']):
+                        self.dashboard.camera_set = True
+
+                        self.dashboard.probe_visible = data['visibilities'][0]
+                        self.dashboard.head_visible = data['visibilities'][1]
+                        self.dashboard.coil_visible = data['visibilities'][2]
+
+                    else:
+                        self.dashboard.camera_set = False
+                        self.dashboard.probe_visible = False
+                        self.dashboard.head_visible = False
+                        self.dashboard.coil_visible = False
+                    
+                case 'Neuronavigation to Robot: Update displacement to target':
+                    self._handle_displacement(data)
 
                 self.dashboard.navigation_button_pressed = True
                 self.dashboard.target_set = True
@@ -110,47 +123,47 @@ class MessageHandler:
                     target_matrix = np.array(data['target'])
                     self._handle_target_position(target_matrix)
 
-            case "Neuronavigation to Robot: Unset target":
-                self.dashboard.target_set = False
-                self.dashboard.target_location = (0, 0, 0, 0, 0, 0)
+                case "Neuronavigation to Robot: Unset target":
+                    self.dashboard.target_set = False
+                    self.dashboard.target_location = (0, 0, 0, 0, 0, 0)
 
-            case "Robot to Neuronavigation: Set objective":
-                self.dashboard.robot_moving = False if data["objective"] == 0 else True
+                case "Robot to Neuronavigation: Set objective":
+                    self.dashboard.robot_moving = False if data["objective"] == 0 else True
 
-                if not self.dashboard.robot_set and self.dashboard.robot_moving:
-                    self.message_emit.check_robot_connection()
-            
-            case 'Coil at target':
-                if data['state'] == True:
-                    self.dashboard.at_target = True
-                else:
-                    self.dashboard.at_target = False
-            
-            case "Press navigation button":
-                self.dashboard.navigation_button_pressed = data["cond"]
-            
-            case "Robot to Neuronavigation: Send force sensor data":
-                self.dashboard.force = data["force_feedback"]
-                if not self.dashboard.robot_set:
-                    self.message_emit.check_robot_connection()
-    
-            case "Start navigation":
-                self.dashboard.navigation_button_pressed = True
+                    if not self.dashboard.robot_set and self.dashboard.robot_moving:
+                        self.message_emit.check_robot_connection()
+                
+                case 'Coil at target':
+                    if data['state'] == True:
+                        self.dashboard.at_target = True
+                    else:
+                        self.dashboard.at_target = False
 
-            case "Stop navigation":
-                self.dashboard.navigation_button_pressed = False
+                case "Press navigation button":
+                    self.dashboard.navigation_button_pressed = data["cond"]
+                
+                case "Robot to Neuronavigation: Send force sensor data":
+                    self.dashboard.force = data["force_feedback"]
+                    if not self.dashboard.robot_set:
+                        self.message_emit.check_robot_connection()
+        
+                case "Start navigation":
+                    self.dashboard.navigation_button_pressed = True
 
-            case "Neuronavigation to Robot: Set free drive":
-                pressed = data["set"]
-                self.dashboard.free_drive_robot_pressed = pressed
-            
-            case 'Press move away button':
-                pressed = data['pressed']
-                self.dashboard.move_upward_robot_pressed = pressed
+                case "Stop navigation":
+                    self.dashboard.navigation_button_pressed = False
 
-            case "Press robot button":
-                pressed = data['pressed']
-                self.dashboard.active_robot_pressed = pressed
+                case "Neuronavigation to Robot: Set free drive":
+                    pressed = data["set"]
+                    self.dashboard.free_drive_robot_pressed = pressed
+                
+                case 'Press move away button':
+                    pressed = data['pressed']
+                    self.dashboard.move_upward_robot_pressed = pressed
+
+                case "Press robot button":
+                    pressed = data['pressed']
+                    self.dashboard.active_robot_pressed = pressed
 
             case "Robot to Neuronavigation: Initial config":
                 self.robot_state.sync_from_embedded(data['config'])
@@ -201,8 +214,25 @@ class MessageHandler:
 
     def _handle_displacement(self, data):
         """Handle displacement to target update."""
-        self.dashboard.displacement = list(map(lambda x: data['displacement'][x], range(6)))
-        self.dashboard.module_displacement = round(np.linalg.norm(self.dashboard.displacement[:3]),2)
+        displacement = list(map(lambda x: data['displacement'][x], range(6)))
+        self.dashboard.displacement = displacement
+        self.dashboard.module_displacement = round(np.linalg.norm(displacement[:3]), 2)
+
+        # Compute coil location from target + displacement
+        # This ensures coil and target are in the same coordinate system
+        if self.dashboard.target_set:
+            target = self.dashboard.target_location
+            # Displacement is (dx, dy, dz, drx, dry, drz)
+            # Position: add directly (same units - mm)
+            # Rotation: displacement angles are in degrees, convert to radians
+            self.dashboard.coil_location = (
+                target[0] + displacement[0],
+                target[1] + displacement[1],
+                target[2] + displacement[2],
+                target[3] + np.radians(displacement[3]),
+                target[4] + np.radians(displacement[4]),
+                target[5] + np.radians(displacement[5]),
+            )
 
         # Update displacement history for plotting
         self.dashboard.add_displacement_sample()

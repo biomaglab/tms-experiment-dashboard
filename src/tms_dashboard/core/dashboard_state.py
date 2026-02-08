@@ -22,7 +22,10 @@ class DashboardState:
     """
     
     def __init__(self):
-        # Navigation button status
+        self.__set_init_state()
+    
+    def __set_init_state(self):
+                # Navigation button status
         self.navigation_button_pressed = False
         self.free_drive_robot_pressed = False
         self.move_upward_robot_pressed = False
@@ -131,6 +134,10 @@ class DashboardState:
         self.number_conditions = '4'
         self.trials_per_condition = '30'
         self.intertrial_interval = '12'  # ms
+    
+    def reset_state(self):
+        self.__set_init_state()
+        print("Dashboard reseted")
     
     def add_displacement_sample(self):
         """Add current displacement and rotation values to history for time series plotting.

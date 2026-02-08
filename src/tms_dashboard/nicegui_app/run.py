@@ -4,10 +4,10 @@
 
 import threading
 import time
-from nicegui import ui
+from nicegui import ui, app
 import traceback
 
-from tms_dashboard.config import DEFAULT_HOST, DEFAULT_PORT, NICEGUI_PORT
+from tms_dashboard.config import DEFAULT_HOST, DEFAULT_PORT, NICEGUI_PORT, STATIC_DIR
 from tms_dashboard.constants import TriggerType
 
 from tms_dashboard.core.dashboard_state import DashboardState
@@ -124,6 +124,9 @@ def main():
     
     # Start background services once
     start_background_services()
+    
+    # Serve static files
+    app.add_static_files('/static', str(STATIC_DIR))
     
     # Run NiceGUI server
     ui.run(
