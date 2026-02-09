@@ -200,16 +200,16 @@ class MessageHandler:
         poses = data['poses']
         # Convert angles to degrees
         self.dashboard.probe_location = (
-            poses[0][1], -poses[0][2], -poses[0][0],
-            np.radians(poses[0][4]), -np.radians(poses[0][5]), np.radians(poses[0][3])
+            poses[0][0], poses[0][1], poses[0][2],
+            np.radians(poses[0][3]), np.radians(poses[0][4]), np.radians(poses[0][5])
         )
         self.dashboard.head_location = (
-            poses[1][1], -poses[1][2], -poses[1][0],
-            np.radians(poses[1][4]), -np.radians(poses[1][5]), np.radians(poses[1][3])
+            poses[1][0], poses[1][1], poses[1][2],
+            np.radians(poses[1][3]), np.radians(poses[1][4]), np.radians(poses[1][5])
         )
         self.dashboard.coil_location = (
-            poses[2][1], -poses[2][2], -poses[2][0],
-            np.radians(poses[2][4]), -np.radians(poses[2][5]), np.radians(poses[2][3])
+            poses[2][0], poses[2][1], poses[2][2],
+            np.radians(poses[2][3]), np.radians(poses[2][4]), np.radians(poses[2][5])
         )
 
     def _handle_displacement(self, data):
@@ -217,22 +217,6 @@ class MessageHandler:
         displacement = list(map(lambda x: data['displacement'][x], range(6)))
         self.dashboard.displacement = displacement
         self.dashboard.module_displacement = round(np.linalg.norm(displacement[:3]), 2)
-
-        # Compute coil location from target + displacement
-        # This ensures coil and target are in the same coordinate system
-        if self.dashboard.target_set:
-            target = self.dashboard.target_location
-            # Displacement is (dx, dy, dz, drx, dry, drz)
-            # Position: add directly (same units - mm)
-            # Rotation: displacement angles are in degrees, convert to radians
-            self.dashboard.coil_location = (
-                target[0] + displacement[0],
-                target[1] + displacement[1],
-                target[2] + displacement[2],
-                target[3] + np.radians(displacement[3]),
-                target[4] + np.radians(displacement[4]),
-                target[5] + np.radians(displacement[5]),
-            )
 
         # Update displacement history for plotting
         self.dashboard.add_displacement_sample()

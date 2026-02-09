@@ -50,12 +50,12 @@ def create_3d_scene_with_models(dashboard: DashboardState):
             )
             
             with ui.row().style("width: calc(100% - 30px); height: calc(100% - 30px); margin: 15px;"):
-                with ui.scene().classes('w-full h-full') as scene:
+                with ui.scene(grid=(0.1, 0.1)).classes('w-full h-full') as scene:
                     # scene.run_method('cameraControls.enabled = false')
                     # Head model - positioned at origin (head coordinates)
                     # Static reference - doesn't move, just for visual context
                     head_url = '/static/objects/head.stl'
-                    head_stl = scene.stl(head_url).scale(SCALE * 1.95).material("#949494", opacity=0.9)
+                    head_stl = scene.stl(head_url).scale(SCALE * 2.9).material("#949494", opacity=1)
                     # Rotate head to stand upright: X rotation of -90° (occipital was facing ground)
                     head_stl.move(0, 0, 1).rotate(math.pi/2, 0, -math.pi/10)
                     #-math.pi/2
@@ -67,7 +67,7 @@ def create_3d_scene_with_models(dashboard: DashboardState):
                     # Target marker - visual indicator of target position
                     # This will be positioned when target is set
                     coil_path = '/static/objects/aim.stl'
-                    target_marker_stl = scene.stl(coil_path).scale(SCALE).material('#ff0000', opacity=0.5)
+                    target_marker_stl = scene.stl(coil_path).scale(SCALE).material('red', opacity=0)
                     
                     # Timer to update object positions from dashboard state
                     def update_positions():
@@ -83,14 +83,14 @@ def create_3d_scene_with_models(dashboard: DashboardState):
                             # Mapping: X_threejs = X_inv, Y_threejs = Z_inv, Z_threejs = -Y_inv
                             
                             # Target position (convert coords and scale)
-                            target_x = target[0] * SCALE
-                            target_y = target[2] * SCALE        # Z becomes Y (up)
-                            target_z = -target[1] * SCALE       # -Y becomes Z
+                            target_x = (target[1]-dashboard.head_location[1]) * SCALE + 1.9
+                            target_y = -(target[2]-dashboard.head_location[2]) * SCALE + 0.5 
+                            target_z = -(target[0]-dashboard.head_location[0]) * SCALE 
                             
                             # Target rotation (axis swap)
-                            target_rx = target[3]               # X rotation (already radians)
-                            target_ry = target[5]               # Z rotation becomes Y
-                            target_rz = -target[4]              # -Y rotation becomes Z
+                            target_rx = target[4] - dashboard.head_location[4]            # X rotation (already radians)
+                            target_ry = -(target[5] - dashboard.head_location[5])              # Z rotation becomes Y
+                            target_rz = -(target[3] - dashboard.head_location[3])             # -Y rotation becomes Z
                             
                             # Position and rotate target
                             target_marker_stl.move(target_x, target_y, target_z)
@@ -99,47 +99,53 @@ def create_3d_scene_with_models(dashboard: DashboardState):
                             
                             # Coil position = target position + displacement (with same conversion)
                             # Displacement is (dx, dy, dz) in mm, (drx, dry, drz) in degrees
-                            coil_x = target_x + displacement[0] * SCALE
-                            coil_y = target_y + displacement[2] * SCALE        # Z becomes Y
-                            coil_z = target_z + (-displacement[1]) * SCALE     # -Y becomes Z
+                            coil_x = target_x + (displacement[1]) * SCALE
+                            coil_y = target_y + (-displacement[0]) * SCALE        # Z becomes Y
+                            coil_z = target_z + (displacement[2]) * SCALE    # -Y becomes Z
                             
                             # Coil rotation = target rotation + displacement rotation
-                            coil_rx = target_rx + math.radians(displacement[3])
-                            coil_ry = target_ry + math.radians(displacement[5])  # Z becomes Y
-                            coil_rz = target_rz + (-math.radians(displacement[4]))  # -Y becomes Z
+                            coil_rx = target_rx + (math.radians(displacement[4]))
+                            coil_ry = target_ry + (-math.radians(displacement[3]))  # Z becomes Y
+                            coil_rz = target_rz + (math.radians(displacement[5]))  # -Y becomes Z
                             
                             coil_stl.move(coil_x, coil_y, coil_z)
                             coil_stl.rotate(coil_rx, coil_ry, coil_rz)
                             
                             # Dynamic camera: perpendicular to target plane (like InVesalius)
-                            min_distance = 2
-                            max_distance = 12.0
+                            min_distance = 1
+                            max_distance = 2.5
                             displacement_mm = dashboard.module_displacement
-                            normalized_displacement = min(1.0, displacement_mm / 150.0)
+                            normalized_displacement = min(1.0, displacement_mm / 140)
                             camera_distance = min_distance + (max_distance - min_distance) * normalized_displacement
                             
-                            # Get target's rotation matrix to calculate normal vector
-                            # The target's Z-axis points outward from brain (coil direction)
+                            # Get target's rotation matrix to calculate normal and handle direction
                             target_rotation = R.from_euler('xyz', [target_rx, target_ry, target_rz], degrees=False)
                             target_rot_matrix = target_rotation.as_matrix()
                             
                             # Normal vector = target's Z-axis (direction coil faces)
-                            # In Three.js Y-up, this is the direction we want to position camera
                             normal_vector = target_rot_matrix[:, 2]  # Z-axis column
+                            
+                            # Handle direction = target's Y-axis
+                            # Rotate camera position 90° around normal so handle appears vertical
+                            handle_vector = target_rot_matrix[:, 1]  # Y-axis column (handle direction)
                             
                             # Position camera along normal vector, looking back at target
                             camera_x = target_x + normal_vector[0] * camera_distance
                             camera_y = target_y + normal_vector[1] * camera_distance
                             camera_z = target_z + normal_vector[2] * camera_distance
                             
-                            scene.move_camera(
-                                x=camera_x,
-                                y=camera_y,
-                                z=camera_z,
-                                look_at_x=target_x,
-                                look_at_y=target_y,
-                                look_at_z=target_z,
-                            )
+                            if dashboard.navigation_button_pressed:
+                                scene.move_camera(
+                                    x=camera_x,
+                                    y=camera_y,
+                                    z=camera_z,
+                                    look_at_x=target_x,
+                                    look_at_y=target_y,
+                                    look_at_z=target_z,
+                                    up_x=-handle_vector[0],
+                                    up_y=-handle_vector[1],
+                                    up_z=-handle_vector[2],
+                                )
                         
                         else:
                             # No target - reset to origin
