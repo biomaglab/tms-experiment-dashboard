@@ -3,20 +3,22 @@
 """Header component for NiceGUI app - Alternative Modal Approach"""
 
 from nicegui import ui
-from tms_dashboard.config import IMAGES_DIR, CSV_PATH
+
 from tms_dashboard.core.dashboard_state import DashboardState
-from tms_dashboard.core.data_logger import DataLogger
+from tms_dashboard.core.robot_config_state import RobotConfigState
+from tms_dashboard.config import IMAGES_DIR
+
+from tms_dashboard.nicegui_app.ui.widgets.robot_dialog import open_robot_config
 from tms_dashboard.nicegui_app.ui.experiment_form import create_experiment_form
 from tms_dashboard.nicegui_app.ui.checklist_tab import create_checklist_tab
 
-
-def create_header(dashboard: DashboardState):
+def create_header(dashboard: DashboardState, robot_config: RobotConfigState, message_emit=None):
     """Create clean minimal header with working experiment config dialog.
     
     Args:
         dashboard: DashboardState instance
-        ui_state: DashboardUI instance (optional, for consistency)
     """
+    
     # Header row
     with ui.row().classes('w-full items-center justify-between').style(
         'background-color: #ffffff;'
@@ -27,7 +29,7 @@ def create_header(dashboard: DashboardState):
         # Left side: Logo + Title
         with ui.row().classes('items-center gap-4'):
             ui.image(str(IMAGES_DIR / 'biomag_logo.jpg')).classes('rounded').style(
-                'width: 40px; height: 40px; object-fit: cover;'
+                'width: 45px; height: 45px; object-fit: cover;'
             )
             ui.label('Biomag TMS Dashboard').style(
                 'font-size: 1.5rem; font-weight: 600; color: #111827;'
@@ -36,6 +38,10 @@ def create_header(dashboard: DashboardState):
         
         # Right side: Experiment Description button and Checklist button (grouped)
         with ui.row().classes('items-center gap-2'):
+
+            ui.button('Configure Robot', on_click=lambda: open_robot_config(robot_config, message_emit, dashboard), icon='settings').props('flat').style(
+                'font-weight: 500; color: #6b7280;'
+            )
             # Experiment Description opens the experiment form dialog (renamed from 'Configure Experiment')
             exp_btn = create_experiment_form(dashboard, button_label='Experiment Description', header_mode=True)
             exp_btn.style('min-height: 40px; padding: 6px 14px; display: inline-flex; align-items: center;')

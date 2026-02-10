@@ -90,6 +90,7 @@ class UpdateDashboard:
         
         # Convert deques to lists for plotting
         time_data = list(dashboard.displacement_time_history)
+        time_trigger = list(dashboard.trigged_times)
         x_data = list(dashboard.displacement_history_x)
         y_data = list(dashboard.displacement_history_y)
         z_data = list(dashboard.displacement_history_z)
@@ -104,6 +105,15 @@ class UpdateDashboard:
         ui_state.displacement_plot.figure.data[1].y = y_data
         ui_state.displacement_plot.figure.data[2].x = time_data
         ui_state.displacement_plot.figure.data[2].y = z_data
+
+        ui_state.displacement_plot.figure.layout.shapes = []
+        for trigger in time_trigger:
+            if trigger in time_data:
+                ui_state.displacement_plot.figure.add_vline(
+                x=trigger,
+                line=dict(color="red", width=2, dash="dash"),
+                opacity=0.8
+            )
         
         # Force auto-range to handle sliding window
         ui_state.displacement_plot.figure.layout.xaxis.autorange = True
@@ -119,6 +129,7 @@ class UpdateDashboard:
         rx_data = list(dashboard.rotation_history_rx)
         ry_data = list(dashboard.rotation_history_ry)
         rz_data = list(dashboard.rotation_history_rz)
+        time_trigger = list(dashboard.trigged_times)
         
         if ui_state.rotation_plot is None:
             return
@@ -131,6 +142,15 @@ class UpdateDashboard:
         ui_state.rotation_plot.figure.data[2].x = time_data
         ui_state.rotation_plot.figure.data[2].y = rz_data
         
+        ui_state.displacement_plot.figure.layout.shapes = []
+        for trigger in time_trigger:
+            if trigger in time_data:
+                ui_state.displacement_plot.figure.add_vline(
+                x=trigger,
+                line=dict(color="red", width=2, dash="dash"),
+                opacity=0.8
+            )
+
         # Force auto-range to handle sliding window
         ui_state.rotation_plot.figure.layout.xaxis.autorange = True
         ui_state.rotation_plot.update()
@@ -151,7 +171,7 @@ class UpdateDashboard:
             return
             
         mep_history = list(dashboard.mep_history_baseline)[-num_windows:]
-
+        mep_p2p_history = list(dashboard.mep_p2p_history_baseline)[-num_windows:]
         # Eixo X
         t_ms = np.linspace(t_min_ms, t_max_ms, len(mep_history[0]))
         
@@ -167,16 +187,40 @@ class UpdateDashboard:
                 hoverinfo='skip', # Otimização: ignora hover no histórico
                 name=f'Trial {i}'
             ))
+            # Annotation for history (optional, keeps it cleaner if only on last? User asked for "on the curve")
+            if i < len(mep_p2p_history):
+                peak_idx = np.argmax(mep)
+                traces.append(go.Scatter(
+                    x=[t_ms[peak_idx]], y=[mep[peak_idx]],
+                    mode='text',
+                    text=[f'{mep_p2p_history[i]:.0f} uV'],
+                    textposition='top center',
+                    textfont=dict(color='gray', size=18),
+                    showlegend=False,
+                    hoverinfo='skip'
+                ))
             
         # Último (vermelho destaque)
         if len(mep_history) > 0:
+            last_mep = mep_history[-1]
             traces.append(go.Scatter(
-                x=t_ms, y=mep_history[-1],
+                x=t_ms, y=last_mep,
                 mode='lines',
                 line=dict(color='#dc2626', width=3),
                 name='Last Response',
-                showlegend=False # Sem legenda para manter limpo, ou True se quiser
+                showlegend=False 
             ))
+            if len(mep_p2p_history) > 0:
+                peak_idx = np.argmax(last_mep)
+                traces.append(go.Scatter(
+                    x=[t_ms[peak_idx]], y=[last_mep[peak_idx]],
+                    mode='text',
+                    text=[f'{mep_p2p_history[-1]:.0f} µV'],
+                    textposition='top center',
+                    textfont=dict(color='#dc2626', size=24, weight='bold'),
+                    showlegend=False,
+                    hoverinfo='skip'
+                ))
             
         # Atualiza figura
         # Substituímos a figura inteira para evitar o erro de validação do Plotly

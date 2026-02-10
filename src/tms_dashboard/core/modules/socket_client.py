@@ -140,6 +140,10 @@ class SocketClient:
                 break
         return messages
     
+    def clear_buffer(self) -> None:
+        while not self.__buffer.empty():
+            self.__buffer.get_nowait()
+    
     @property
     def is_connected(self) -> bool:
         """Verifica se está conectado ao servidor."""

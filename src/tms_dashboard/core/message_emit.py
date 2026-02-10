@@ -1,7 +1,6 @@
 import time
 
-from tms_dashboard.constants import BrainTargetModel
-from tms_dashboard.utils.signal_processing import p2p_from_time
+from src.tms_dashboard.constants import BrainTargetModel
 
 class Message2Server():
     def __init__(self, socket_client, dashboard):
@@ -41,14 +40,49 @@ class Message2Server():
     def check_robot_connection(self):
         self.__send_message2robot(topic="Neuronavigation to Robot: Check connection robot")
 
-    def send_mep_value(self, series_meps: list):
+    def send_mep_value(self, meps: list):
         if self.dashboard.at_target:
             targets = []
-            for mep in series_meps:
-                mep_value = p2p_from_time(mep, self.dashboard.mep_sampling_rate, -10)
+            for mep in meps:
                 target = BrainTargetModel()
-                target.mep = round(mep_value, 2)
+                target.mep = mep
                 targets.append(target.to_dict())
             
-            self.dashboard.status_new_mep = False
-            return self.__send_message2navigation(topic="Set brain targets", data={'brain_targets': targets})
+            self.__send_message2navigation(topic="Set brain targets", data={'brain_targets': targets})
+        self.dashboard.status_new_mep = False
+
+    def request_robot_config(self):
+        self.check_robot_connection()
+        self.__send_message2robot(topic="Neuronavigation to Robot: Request config")
+    
+    def send_robot_config(self, robot_config):
+        """Send robot configuration to the robot control system.
+        
+        Args:
+            robot_config: RobotConfigState instance with configuration parameters
+            
+        Returns:
+            bool: True if message was sent successfully
+        """
+        self.__send_message2robot(
+            topic='Neuronavigation to Robot: Update config', 
+            data=robot_config.to_dict()
+        )
+
+        pids_factors = {"translations": [
+                                        robot_config.pid_x.to_dict(),
+                                        robot_config.pid_y.to_dict(),
+                                        robot_config.pid_z.to_dict()
+                                        ],
+                        "rotations": [
+                                        robot_config.pid_rx.to_dict(),
+                                        robot_config.pid_ry.to_dict(),
+                                        robot_config.pid_rz.to_dict(),
+                                        ]}
+        self.__send_message2robot(
+            topic='Neuronavigation to Robot: Update robot control pid factors', 
+            data=pids_factors
+        )
+
+        return True
+

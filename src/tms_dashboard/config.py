@@ -9,9 +9,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 STATIC_DIR = PROJECT_ROOT / "src" / "tms_dashboard" / "static"
 IMAGES_DIR = STATIC_DIR / "images"
+OBJECTS_DIR = STATIC_DIR / "objects"
 
 # Socket connection settings
-# DEFAULT_HOST = '143.107.220.213'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 5000
 

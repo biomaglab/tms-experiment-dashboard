@@ -21,6 +21,7 @@ Transformation mapping:
 
 from typing import List, Tuple
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 class InVesaliusToThreeJS:
@@ -111,3 +112,97 @@ def scale_position(position: List[float], scale: float = 1.0) -> List[float]:
         Scaled position
     """
     return [p * scale for p in position]
+
+
+# ============================================================================
+# Matrix Transformation Utilities
+# ============================================================================
+
+def pose_to_matrix(pose: List[float]) -> np.ndarray:
+    """
+    Convert pose (x, y, z, rx, ry, rz) to 4x4 transformation matrix.
+    
+    Args:
+        pose: [x, y, z, rx, ry, rz] where rotations are in radians
+    
+    Returns:
+        4x4 transformation matrix
+    """
+    x, y, z, rx, ry, rz = pose
+    
+    # Create rotation matrix from Euler angles (XYZ order, extrinsic)
+    rot = R.from_euler('xyz', [rx, ry, rz], degrees=False)
+    
+    # Build 4x4 transformation matrix
+    mat = np.eye(4)
+    mat[:3, :3] = rot.as_matrix()
+    mat[:3, 3] = [x, y, z]
+    
+    return mat
+
+
+def matrix_to_pose(matrix: np.ndarray) -> Tuple[List[float], List[float]]:
+    """
+    Extract pose from 4x4 transformation matrix.
+    
+    Args:
+        matrix: 4x4 transformation matrix
+    
+    Returns:
+        (position, rotation) where:
+            - position: [x, y, z]
+            - rotation: [rx, ry, rz] in radians
+    """
+    # Extract position
+    position = matrix[:3, 3].tolist()
+    
+    # Extract rotation
+    rot = R.from_matrix(matrix[:3, :3])
+    rotation = rot.as_euler('xyz', degrees=False).tolist()
+    
+    return position, rotation
+
+
+def rotation_matrix_to_euler_angles(R_mat: List[List[float]]) -> List[float]:
+    """
+    Convert 3x3 rotation matrix to Euler angles.
+    
+    Args:
+        R_mat: 3x3 rotation matrix (list of lists or numpy array)
+    
+    Returns:
+        [rx, ry, rz] Euler angles in radians (XYZ order, extrinsic)
+    """
+    R_mat_np = np.array(R_mat)
+    rot = R.from_matrix(R_mat_np)
+    return rot.as_euler('xyz', degrees=False).tolist()
+
+
+def compute_relative_pose(target_pose: List[float], reference_pose: List[float]) -> List[float]:
+    """
+    Compute target pose relative to reference frame.
+    
+    This calculates: pose_relative = inv(reference) @ target
+    
+    Args:
+        target_pose: [x, y, z, rx, ry, rz] in global frame (radians)
+        reference_pose: [x, y, z, rx, ry, rz] defining new frame origin (radians)
+    
+    Returns:
+        target pose in reference frame coordinates [x, y, z, rx, ry, rz] (radians)
+    
+    Example:
+        If head is at (10, 5, 0, 0, 0, 0) and coil is at (12, 6, 1, 0.1, 0, 0):
+        Coil relative to head = (2, 1, 1, 0.1, 0, 0)
+    """
+    # Convert poses to transformation matrices
+    m_ref = pose_to_matrix(reference_pose)
+    m_target = pose_to_matrix(target_pose)
+    
+    # Compute relative transformation: inv(m_ref) @ m_target
+    m_relative = np.linalg.inv(m_ref) @ m_target
+    
+    # Extract position and rotation
+    position, rotation = matrix_to_pose(m_relative)
+    
+    return position + rotation

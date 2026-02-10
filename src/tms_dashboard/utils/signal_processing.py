@@ -88,4 +88,4 @@ def p2p_from_time(signal, fs, tmin_ms, start_ms=10):
     signal = np.asarray(signal)
     start_idx = int(round((start_ms - tmin_ms) * fs / 1000))
     cropped = signal[start_idx:]
-    return np.ptp(cropped)
+    return round(np.ptp(cropped),2)
