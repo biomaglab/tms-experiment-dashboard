@@ -30,6 +30,11 @@ class MessageHandler:
 
         self.target_status = None
         self.neuronaviagator_status: bool = True
+
+        # Inactivity timeout: reset dashboard if no messages for 30s
+        self._last_message_time = time.time()
+        self._timeout_seconds = 30.0
+        self._timed_out = False
     
     def process_messages(self) -> Optional[dict]:
         """Process all messages in buffer and update dashboard state.
@@ -40,8 +45,16 @@ class MessageHandler:
         buf = self.socket_client.get_buffer()
         
         if len(buf) == 0:
+            # Check for inactivity timeout
+            if not self._timed_out and (time.time() - self._last_message_time) > self._timeout_seconds:
+                self.dashboard.reset_state()
+                self._timed_out = True
             return None
         
+        # Messages received — update timestamp and clear timeout flag
+        self._last_message_time = time.time()
+        self._timed_out = False
+
         for message in buf:
             topic, data = message['topic'], message['data']
             self._handle_message(topic, data)
