@@ -134,7 +134,11 @@ class DashboardState:
         self.number_conditions = '4'
         self.trials_per_condition = '30'
         self.intertrial_interval = '12'  # ms
-    
+
+        self.stl_urls: dict[str, str] = {}  # {'head': 'data:model/stl;base64,...'}
+        self.stl_objects: dict[str, any] = {}  # {'head': <Scene element>, ...}
+        self.stl_version: int = 0  # increment whenever a new STL arrives
+
     def reset_state(self):
         self.__set_init_state()
         print("Dashboard reseted")

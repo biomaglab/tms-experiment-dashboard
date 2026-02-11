@@ -31,6 +31,10 @@ class Message2Server():
         if self.dashboard.robot_set:
             return self.__send_message2navigation(topic='Press move away button', data= {'pressed': not self.dashboard.move_upward_robot_pressed})
         return False
+
+    def request_invesalius_mesh(self):
+        return self.__send_message2navigation(topic='Publish surface')
+
     def active_robot(self):
         self.check_robot_connection()
         if self.dashboard.robot_set:

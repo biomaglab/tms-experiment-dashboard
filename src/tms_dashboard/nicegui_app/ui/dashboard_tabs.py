@@ -110,4 +110,4 @@ def create_dashboard_tabs(dashboard: DashboardState, message_emit, ui_state: Das
                 'background-color: #f9fafb;'
                 'gap: 1.5rem;'
             ):
-                create_3d_scene_with_models(dashboard)
+                create_3d_scene_with_models(dashboard, message_emit)
