@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Message handler for processing navigation status updates"""
-import base64
+import threading
 import numpy as np
-from scipy.spatial.transform import Rotation as R
 from typing import Optional
 import time
 
@@ -31,10 +30,13 @@ class MessageHandler:
         self.target_status = None
         self.neuronaviagator_status: bool = True
 
-        # Inactivity timeout: reset dashboard if no messages for 30s
+        # Inactivity timeout: reset dashboard if no messages for 120s
         self._last_message_time = time.time()
         self._timeout_seconds = 120.0
         self._timed_out = False
+
+        self._debounce_seconds = 10
+        self._surface_debounce_timer = None
     
     def process_messages(self) -> Optional[dict]:
         """Process all messages in buffer and update dashboard state.
@@ -192,7 +194,7 @@ class MessageHandler:
                     self.dashboard.wait_for_stl = False
 
                 case "Fold surface task":
-                    self.message_emit.request_invesalius_mesh()
+                    self._debounce_surface_request()
                 
                 case "Set surface colour" | "Set surface transparency":
                     self._handle_material_surface(data)
@@ -204,6 +206,16 @@ class MessageHandler:
                             if index in self.dashboard.stl_urls:
                                 self.dashboard.stl_urls.pop(index)
                                 self.dashboard.stl_objects[index].delete()
+
+    def _debounce_surface_request(self):
+        """Debounce surface requests to avoid overloading the socket."""
+        if self._surface_debounce_timer is not None:
+            self._surface_debounce_timer.cancel()
+        self._surface_debounce_timer = threading.Timer(
+            self._debounce_seconds,
+            self.message_emit.request_invesalius_mesh
+        )
+        self._surface_debounce_timer.start()
 
                     
     def _handle_image_fiducial(self, data):
@@ -311,12 +323,11 @@ class MessageHandler:
                 if "transparency" in data:
                     prop_material, key = 1 - data["transparency"], "transparency"
                 elif "colour" in data:
-                    color, key = data["colour"], "colour"
+                    color, key = data["colour"], "color"
                     rgb_255 = [int(x * 255) for x in color]
                     prop_material = "#{:02x}{:02x}{:02x}".format(*rgb_255)
                 else:
                     return
-                
                 self.dashboard.stl_urls[surface_index][key] = prop_material
                 self.dashboard.stl_version += 1
 
