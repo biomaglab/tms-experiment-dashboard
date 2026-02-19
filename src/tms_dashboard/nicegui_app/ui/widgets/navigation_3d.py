@@ -46,26 +46,6 @@ def create_3d_scene_with_models(dashboard: DashboardState, message_emit: Message
 
                     scene.move_camera(x=0, y=80, z=200, look_at_x=0, look_at_y=0, look_at_z=0)
 
-                    # Disable depthWrite on coil and target so they don't block
-                    # the view of head/brain surfaces behind them
-                    for stl_obj in [coil_stl, target_marker_stl]:
-                        try:
-                            ui.run_javascript(f'''
-                                setTimeout(() => {{
-                                    for (const [key, el] of Object.entries(window)) {{
-                                        if (key.startsWith("scene_")) {{
-                                            el.traverse((child) => {{
-                                                if (child.object_id === "{stl_obj.id}" && child.material) {{
-                                                    child.material.depthWrite = false;
-                                                }}
-                                            }});
-                                        }}
-                                    }}
-                                }}, 500);
-                            ''')
-                        except Exception:
-                            pass
-
                     # Per-scene storage for STL objects (NOT shared across clients)
                     local_stl_objects: dict = {}
 
