@@ -14,20 +14,22 @@ class UpdateDashboard:
         self.emg_connection = emg_connection
         self.client_manager = client_manager
 
+    def update_single(self, ui_state):
+        """Update a single client's UI. Called by per-client ui.timer on event loop."""
+        self.update_dashboard_colors(ui_state)
+        self.update_indicators(ui_state)
+        self.update_buttons(ui_state)
+        self.update_displacement_plot(ui_state)
+        self.update_rotation_plot(ui_state)
+        if self.dashboard.status_new_mep:
+            self.update_mep_plot(ui_state)
+
     def update(self):
+        """Update all clients (legacy — kept for compatibility)."""
         ui_states = self.client_manager.get_all_clients()
         for ui_state in ui_states:
             try:
-                self.update_dashboard_colors(ui_state)
-                self.update_indicators(ui_state)
-                self.update_buttons(ui_state)
-                # Plots need special handling because they might be heavy to update in loop if not careful,
-                # but for now we just update them all.
-                # Ideally, NiceGUI handles this efficiently.
-                self.update_displacement_plot(ui_state)
-                self.update_rotation_plot(ui_state)
-                if self.dashboard.status_new_mep:
-                    self.update_mep_plot(ui_state)
+                self.update_single(ui_state)
             except Exception as e:
                 print(f"Error updating client: {e}")
 
@@ -98,6 +100,14 @@ class UpdateDashboard:
         if ui_state.displacement_plot is None:
             return
 
+        # Skip if no new data since last update
+        if dashboard.displacement_time_history:
+            last_time = dashboard.displacement_time_history[-1]
+            cache_key = '_cache_last_displacement_time'
+            if getattr(ui_state, cache_key, None) == last_time:
+                return
+            setattr(ui_state, cache_key, last_time)
+
         # Update existing Plotly traces in-place
         ui_state.displacement_plot.figure.data[0].x = time_data
         ui_state.displacement_plot.figure.data[0].y = x_data
@@ -133,6 +143,14 @@ class UpdateDashboard:
         
         if ui_state.rotation_plot is None:
             return
+
+        # Skip if no new data since last update
+        if dashboard.rotation_time_history:
+            last_time = dashboard.rotation_time_history[-1]
+            cache_key = '_cache_last_rotation_time'
+            if getattr(ui_state, cache_key, None) == last_time:
+                return
+            setattr(ui_state, cache_key, last_time)
 
         # Update existing Plotly traces in-place
         ui_state.rotation_plot.figure.data[0].x = time_data

@@ -49,7 +49,7 @@ def start_background_services():
     
     # Background thread for message processing
     def process_messages_loop():
-        """Continuously process messages and update dashboard."""
+        """Continuously process messages and update dashboard (non-UI work only)."""
         while True:
             try:
                 time.sleep(0.1)
@@ -65,13 +65,11 @@ def start_background_services():
                 else:
                     if dashboard.get_all_state_mep():
                         dashboard.reset_all_state_mep()
-                
-                update_dashboard.update()
+
                 if dashboard.status_new_mep:
                     new_meps_only = [dashboard.mep_p2p_history_baseline[i] for i in dashboard.new_meps_index]
                     message_emit.send_mep_value(new_meps_only)
 
-                    
             except Exception as e:
                 print("Error processing messages", e)
                 traceback.print_exc()
@@ -80,12 +78,9 @@ def start_background_services():
     socket_client.connect()
     neuroone_connection.start()
     
-    # Start message processing thread
+    # Start message processing thread (non-UI work only)
     threading.Thread(target=process_messages_loop, daemon=True, name="MessageProcessor").start()
-    
-    
     print("Background services started (socket client + message processor)")
-
 
 @ui.page('/')
 def index():
@@ -118,6 +113,15 @@ def index():
     create_header(dashboard, robot_config, message_emit)
     create_dashboard_tabs(dashboard, message_emit, ui_state)
 
+    # Per-client UI update timer — runs on NiceGUI's event loop, not a background thread
+    def update_client_ui():
+        try:
+            update_dashboard.update_single(ui_state)
+        except Exception:
+            pass
+
+    ui.timer(0.1, update_client_ui)
+
 
 def main():
     """Main entry point for NiceGUI application."""
@@ -139,6 +143,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print("🚀 Starting TMS Dashboard with NiceGUI...")
-    print(f"📡 Acess: http://localhost:{NICEGUI_PORT}")
     main()

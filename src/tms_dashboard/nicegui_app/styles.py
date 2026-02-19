@@ -98,6 +98,12 @@ def change_color(ui_state, target_label: str, new_status: str, colors: tuple = N
     else:
         color = colors[0] if new_status == 'success' else colors[1]
 
+    # Skip if unchanged
+    cache_key = f'_cache_color_{target_label}'
+    if getattr(ui_state, cache_key, None) == color:
+        return
+    setattr(ui_state, cache_key, color)
+
     # Update label if exists in ui_state
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
     if hasattr(ui_state, label_key):
@@ -116,6 +122,11 @@ def change_color(ui_state, target_label: str, new_status: str, colors: tuple = N
 
 def change_icon(ui_state, target_label: str, new_status: str):
     """Change the icon of a label based on status (for Material Icons/Radio Buttons)."""
+    cache_key = f'_cache_icon_{target_label}'
+    if getattr(ui_state, cache_key, None) == new_status:
+        return
+    setattr(ui_state, cache_key, new_status)
+
     icon_key = f'icon_{target_label.lower().replace(" ", "_")}'
     if hasattr(ui_state, icon_key):
         icon = getattr(ui_state, icon_key)
@@ -129,6 +140,11 @@ def change_radio_icon(ui_state, target_label: str, new_status: str):
 
 def change_label(ui_state, target_label: str, new_text: str):
     """Change the label text."""
+    cache_key = f'_cache_label_{target_label}'
+    if getattr(ui_state, cache_key, None) == new_text:
+        return
+    setattr(ui_state, cache_key, new_text)
+
     label_key = f'label_{target_label.lower().replace(" ", "_")}'
     if hasattr(ui_state, label_key):
         label = getattr(ui_state, label_key)
@@ -140,15 +156,19 @@ def get_status(condition: bool) -> str:
     return 'success' if condition else 'neutral'
 
 def change_button(ui_state, target_label: str, new_status: str, colors: tuple = None):
-    # Special handling for the START NAVIGATION button
-    if hasattr(ui_state, target_label):
-        if colors is None:
-            color = '#10b981' if new_status == 'success' else '#9ca3af'
-        else:
-            color = colors[0] if new_status == 'success' else colors[1]
+    if colors is None:
+        color = '#10b981' if new_status == 'success' else '#9ca3af'
+    else:
+        color = colors[0] if new_status == 'success' else colors[1]
 
+    # Skip if unchanged
+    cache_key = f'_cache_btn_{target_label}'
+    if getattr(ui_state, cache_key, None) == color:
+        return
+    setattr(ui_state, cache_key, color)
+
+    if hasattr(ui_state, target_label):
         button = getattr(ui_state, target_label)
-        # Fallback: inline style
         if button:
             button.style(f'background-color: {color} !important;')
             button.update()

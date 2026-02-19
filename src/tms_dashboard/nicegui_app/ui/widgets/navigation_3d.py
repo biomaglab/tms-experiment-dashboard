@@ -169,4 +169,4 @@ def create_3d_scene_with_models(dashboard: DashboardState, message_emit: Message
                         else:
                             target_marker_stl.material(opacity=0)
                     
-                    ui.timer(0.05, update_positions)  # Update at 20 Hz
+                    ui.timer(0.1, update_positions)  # Update at 10 Hz
