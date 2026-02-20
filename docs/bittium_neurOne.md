@@ -12,9 +12,7 @@
 
 The “Real-time Out” subtab provides controls for the Digital Output. To enable it, click Real-time Out in the Protocol subtab.
 
-<p align="center">
-  <img src="docs\images\digitalOut1.jpg" width="800px" alt="Protocol tab">
-</p>
+![Protocol tab](docs/images/digitalOut1.jpg)
 
 The amplifier must be connected to the serial port of the computer using the connection for UDP transfer (RJ45) (see pg 34 of the Bittium NeurOne User Manual)
 
@@ -22,17 +20,13 @@ The amplifier must be connected to the serial port of the computer using the con
 
 Enable Digital Output by clicking on the button to provide additional control buttons on the tool bar.
 
-<p align="center">
-  <img src="docs\images\digitalOut2.jpg" width="800px" alt="Enable Digital Out">
-</p>
+![Enable Digital Out](docs/images/digitalOut2.jpg)
 
 Cogwheel button will open setting of Digital Out.
 
 ### Step 3: Define communication parameters
 
-<p align="center">
-  <img src="docs\images\digitalOut3.jpg" width="800px" alt="Define parameters">
-</p>
+![Define parameters](docs/images/digitalOut3.jpg)
 
 - Define packet frequency as 1000 Hz.
 - Type in the IP address of the computer you will be using to run the Biomag TMS Dashboard.
