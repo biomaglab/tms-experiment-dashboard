@@ -123,9 +123,6 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                         ).classes('w-full').props('outlined dense')
                 
                 # ===== SECTION 5: PID Tuning =====
-                # Determines the initial habilitation state
-                is_pid_algorithm = robot_config.movement_algorithm == 'directly_PID'
-                is_using_sensor = robot_config.use_force_sensor or robot_config.use_pressure_sensor
                 
                 with ui.expansion('PID Tuning', icon='tune', value=False).classes('w-full') as pid_expansion:
                     # Warning message when PID is disabled
@@ -172,11 +169,6 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                             pid_inputs['z_stiffness'] = ui.number(value=robot_config.pid_z.stiffness, min=0, max=1, step=0.01, format='%.3f').props('outlined dense').classes('w-full')
                             pid_inputs['z_damping'] = ui.number(value=robot_config.pid_z.damping, min=0, max=1, step=0.01, format='%.3f').props('outlined dense').classes('w-full')
                         
-                        # Warning when Z-axis is blocked
-                        z_axis_warning = ui.label('⚠️ Z-axis is controlled by force/pressure sensor').style(
-                            'color: #ef4444; font-style: italic; font-size: 0.85rem; display: none;'
-                        )
-                        
                         ui.separator().classes('my-2')
                         
                         # Rotation PID (RX, RY, RZ)
@@ -200,16 +192,9 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                     
                     inputs['pid'] = pid_inputs
                 
-                # input list for disabled Z-axis
-                z_axis_inputs = [
-                    pid_inputs['z_kp'], pid_inputs['z_ki'], pid_inputs['z_kd'],
-                    pid_inputs['z_stiffness'], pid_inputs['z_damping']
-                ]
-                
                 def update_pid_section_state():
                     """Updates the enabled state of the PID section based on algorithm and sensors."""
                     is_pid_mode = inputs['movement_algorithm'].value == 'directly_PID'
-                    using_sensor = inputs['use_force_sensor'].value or inputs['use_pressure_sensor'].value
                     
                     # Controls warning visibility and opacity of PID content
                     if is_pid_mode:
@@ -218,18 +203,6 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                     else:
                         pid_warning.style('display: block;')
                         pid_content.style('opacity: 0.4; pointer-events: none;')
-                    
-                    # Controls inputs of Z-axis based on sensors
-                    if using_sensor and is_pid_mode:
-                        z_axis_warning.style('display: block;')
-                        z_label.style('font-weight: 600; color: #9ca3af; align-self: center;')
-                        for inp in z_axis_inputs:
-                            inp.disable()
-                    else:
-                        z_axis_warning.style('display: none;')
-                        z_label.style('font-weight: 600; color: #10b981; align-self: center;')
-                        for inp in z_axis_inputs:
-                            inp.enable()
                 
                 # Configures callbacks to update the state when algorithm or sensors are changed
                 inputs['movement_algorithm'].on('update:model-value', lambda _: update_pid_section_state())
