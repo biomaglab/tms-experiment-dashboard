@@ -249,6 +249,8 @@ class UpdateDashboard:
         # Forces update
         ui_state.mep_plot.update()
 
+        self.dashboard.status_new_mep = False
+
     def update_buttons(self, ui_state):
         dashboard = self.dashboard
         """Update all dashboard buttons."""
