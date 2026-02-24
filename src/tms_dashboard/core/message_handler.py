@@ -186,6 +186,8 @@ class MessageHandler:
 
                 case "Robot to Neuronavigation: Initial config":
                     self.robot_state.sync_from_embedded(data['config'])
+                
+                case "Robot to Dashboard: PID factors":
                     if 'pid_factors' in data:
                         self.robot_state._sync_pids(data['pid_factors'])
 

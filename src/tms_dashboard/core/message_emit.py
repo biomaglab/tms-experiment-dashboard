@@ -60,6 +60,7 @@ class Message2Server():
     def request_robot_config(self):
         self.check_robot_connection()
         self.__send_message2robot(topic="Neuronavigation to Robot: Request config")
+        self.__send_message2robot(topic="Dashboard to Robot: Request pid factors")
     
     def send_robot_config(self, robot_config):
         """Sends robot configuration to the robot control system.
