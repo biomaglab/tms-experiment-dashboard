@@ -10,6 +10,7 @@ from src.tms_dashboard.core.dashboard_state import DashboardState
 from src.tms_dashboard.core.modules.socket_client import SocketClient
 from src.tms_dashboard.core.message_emit import Message2Server
 from src.tms_dashboard.core.robot_config_state import RobotConfigState
+from src.tms_dashboard.utils.latency import now, to_ms, log_latency
 
 class MessageHandler:
     """Processes messages from socket client and updates dashboard state."""
@@ -191,6 +192,14 @@ class MessageHandler:
                     if 'pid_factors' in data:
                         self.robot_state._sync_pids(data['pid_factors'])
 
+                    # Use this as an ACK for PID update
+                    if hasattr(self.message_emit,
+                               "last_command_time") and self.message_emit.last_command_time is not None:
+                        t_ack = now()
+                        latency = to_ms(self.message_emit.last_command_time, t_ack)
+                        print(f"[LATENCY] End-to-End PID: {latency:.2f} ms")
+                        log_latency("robot_pid_ack", latency)
+
                 case "Neuronavigation to Dashboard: Send surface":
                     self._handle_surface_stl(data)
                     self.dashboard.wait_for_stl = False
@@ -206,6 +215,9 @@ class MessageHandler:
                     if surface_indexes:
                         for index in surface_indexes:
                             self.dashboard.stl_urls.pop(index, None)
+
+                case "Robot to Dashboard: ACK":       # ← REPLACE with your actual ACK topic
+                    self.handle_robot_ack(data)
 
     def _debounce_surface_request(self):
         """Debounce surface requests to avoid overloading the socket."""
@@ -334,3 +346,11 @@ class MessageHandler:
             else:
                 self.message_emit.request_invesalius_mesh()
 
+    # --- robot ACK latency handler ---
+    def handle_robot_ack(self, data):
+        """Handle robot ACK and compute end‑to‑end latency (Dashboard → Robot → Dashboard)."""
+        if hasattr(self.message_emit, "last_command_time") and self.message_emit.last_command_time is not None:
+            t_ack = now()
+            latency = to_ms(self.message_emit.last_command_time, now())
+            print(f"[LATENCY] End-to-End (Dashboard → Robot → Dashboard): {latency:.2f} ms")
+            log_latency("robot_ack", latency)

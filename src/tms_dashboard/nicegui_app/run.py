@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """NiceGUI web application main entry point - Simplified version"""
-
+from fastapi import Request
 import threading
 import time
 from nicegui import ui, app
@@ -34,6 +34,12 @@ update_dashboard = UpdateDashboard(dashboard, neuroone_connection, client_manage
 
 # Flag to ensure background thread starts only once
 _background_thread_started = False
+
+@app.get('/latency_test')
+async def latency_test(request: Request):
+    return {
+        "server_time_ns": time.perf_counter_ns()
+    }
 
 def start_background_services():
     """Start background services (socket client and message processing thread).
