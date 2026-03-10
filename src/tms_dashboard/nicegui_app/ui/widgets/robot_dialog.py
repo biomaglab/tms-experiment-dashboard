@@ -4,7 +4,7 @@
 
 from nicegui import ui
 import asyncio
-
+from src.tms_dashboard.utils.latency import now
 from tms_dashboard.core.dashboard_state import DashboardState
 from tms_dashboard.core.message_emit import Message2Server
 from tms_dashboard.core.robot_config_state import (
@@ -21,7 +21,7 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
         dashboard: DashboardState instance
         message_emit: Message2Server instance for sending config to neuronavigation
     """
-    
+    message_emit.last_command_time_1 = now()
     message_emit.request_robot_config()
     await asyncio.sleep(1.5)
     if dashboard.robot_set:
@@ -288,6 +288,7 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                     
                     # Send to neuronavigation if message_emit available
                     if message_emit is not None:
+                        message_emit.last_command_time_1 = now()
                         success = message_emit.send_robot_config(robot_config)
                         if success:
                             ui.notify('Configuration saved and sent to robot', type='positive', position='top')

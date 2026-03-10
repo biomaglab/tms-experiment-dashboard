@@ -194,9 +194,9 @@ class MessageHandler:
 
                     # Use this as an ACK for PID update
                     if hasattr(self.message_emit,
-                               "last_command_time") and self.message_emit.last_command_time is not None:
+                               "last_command_time_1") and self.message_emit.last_command_time_1 is not None:
                         t_ack = now()
-                        latency = to_ms(self.message_emit.last_command_time, t_ack)
+                        latency = to_ms(self.message_emit.last_command_time_1, t_ack)
                         print(f"[LATENCY] End-to-End PID: {latency:.2f} ms")
                         log_latency("robot_pid_ack", latency)
 
@@ -351,6 +351,6 @@ class MessageHandler:
         """Handle robot ACK and compute end‑to‑end latency (Dashboard → Robot → Dashboard)."""
         if hasattr(self.message_emit, "last_command_time") and self.message_emit.last_command_time is not None:
             t_ack = now()
-            latency = to_ms(self.message_emit.last_command_time, now())
+            latency = to_ms(self.message_emit.last_command_time_1, now())
             print(f"[LATENCY] End-to-End (Dashboard → Robot → Dashboard): {latency:.2f} ms")
             log_latency("robot_ack", latency)

@@ -7,33 +7,32 @@ class Message2Server():
     def __init__(self, socket_client, dashboard):
         self.__socket_client = socket_client
         self.dashboard = dashboard
-        self.last_command_time = None
+        self.last_command_time_1 = None
+        self.last_command_time_2 = None
 
     def __send_message2navigation(self, topic: str, data: dict = None):
         payload = {'topic': topic, 'data': {} if data is None else dict(data)}
 
-        t_start = now()
+        t_start = self.last_command_time_2
         success = self.__socket_client.emit_event('from_robot', payload)
         t_end = now()
-
-        latency = to_ms(t_start, t_end)
-        print(f"[LATENCY] Dashboard → Navigation send ({topic}): {latency:.2f} ms")
-        log_latency(f"navigation_send_{topic}", latency)
+        if t_start is not None:
+            latency = to_ms(t_start, t_end)
+            print(f"[LATENCY] Dashboard → Navigation send ({topic}): {latency:.2f} ms")
+            log_latency(f"navigation_send_{topic}", latency)
 
         return success
     
     def __send_message2robot(self, topic: str, data: dict = None):
         payload = {'topic': topic, 'data': {} if data is None else dict(data)}
 
-        self.last_command_time = now()
-
-        t_start = self.last_command_time
+        t_start = self.last_command_time_1
         success = self.__socket_client.emit_event('from_neuronavigation', payload)
         t_end = now()
-
-        latency = to_ms(t_start, t_end)
-        print(f"[LATENCY] Dashboard → Robot send ({topic}): {latency:.2f} ms")
-        log_latency(f"robot_send_{topic}", latency)
+        if t_start is not None:
+            latency = to_ms(t_start, t_end)
+            print(f"[LATENCY] Dashboard → Robot send ({topic}): {latency:.2f} ms")
+            log_latency(f"robot_send_{topic}", latency)
 
         return success
 

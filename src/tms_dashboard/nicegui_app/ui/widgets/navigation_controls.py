@@ -4,6 +4,7 @@
 
 from nicegui import ui
 from tms_dashboard.core.dashboard_state import DashboardState
+from src.tms_dashboard.utils.latency import now
 
 
 from tms_dashboard.nicegui_app.ui_state import DashboardUI
@@ -36,6 +37,7 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
         
         # Create Target button
         def _create_target_click(e=None):
+            message_emit.last_command_time_2 = now()
             success = message_emit.create_marker()
 
             if success:
@@ -53,6 +55,7 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
         ui.label('Robot Control').style('font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: #374151;')
 
         def _free_drive_click(e=None):
+            message_emit.last_command_time_1 = now()
             success = message_emit.free_drive_robot()
 
             if success:
@@ -70,6 +73,7 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
         ui.separator().style('margin: 4px 0;')
 
         def _active_robot_click(e=None):
+            message_emit.last_command_time_1 = now()
             success = message_emit.active_robot()
 
             if success:
@@ -87,6 +91,7 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
         ui.separator().style('margin: 4px 0;')
 
         def _upward_click(e=None):
+            message_emit.last_command_time_1 = now()
             success = message_emit.move_upward_robot()
 
             if success:
