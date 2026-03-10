@@ -64,3 +64,6 @@ class DashboardUI:
         self.upward_robot_button = None
         self.active_robot_button = None
         self.free_drive_button = None
+
+        # Latency Metrics
+        self.client_clock_offset_ns = 0

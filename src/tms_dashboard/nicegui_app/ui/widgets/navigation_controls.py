@@ -36,8 +36,9 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
         ui.separator().style('margin: 4px 0;')
         
         # Create Target button
-        def _create_target_click(e=None):
-            message_emit.last_command_time_2 = now()
+        def _create_target_click(e):
+            timestamp_ns = int(float(e.args['timeStamp']) * 1_000_000)
+            message_emit.last_command_time_2 = timestamp_ns + ui_state.client_clock_offset_ns
             success = message_emit.create_marker()
 
             if success:
@@ -45,17 +46,18 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
             else:
                 ui.notify('Failed to send Create marker', position='top')
 
-        ui.button('Create Target', icon='add_location_alt', on_click=_create_target_click).props('outlined color=primary').classes('w-full').style(
+        ui.button('Create Target', icon='add_location_alt').props('outlined color=primary').classes('w-full').style(
             'font-size: 0.95rem; '
             'min-height: 50px;'
-        )
+        ).on('click', _create_target_click, args=['timeStamp'])
     
     # Robot Control column
     with ui.column().style('gap: 5px; flex: 1; height: 100%; width: 100%;'):
         ui.label('Robot Control').style('font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; color: #374151;')
 
-        def _free_drive_click(e=None):
-            message_emit.last_command_time_1 = now()
+        def _free_drive_click(e):
+            timestamp_ns = int(float(e.args['timeStamp']) * 1_000_000)
+            message_emit.last_command_time_1 = timestamp_ns + ui_state.client_clock_offset_ns
             success = message_emit.free_drive_robot()
 
             if success:
@@ -63,17 +65,18 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
             else:
                 ui.notify('Failed to activate free drive', position='top')
         
-        button = ui.button('Free Drive Robot', icon='gesture', on_click=_free_drive_click).props('flat outlined').classes('w-full').style(
+        button = ui.button('Free Drive Robot', icon='gesture').props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
             'min-height: 50px;'
-        )
+        ).on('click', _free_drive_click, args=['timeStamp'])
 
         ui_state.free_drive_button =  button
 
         ui.separator().style('margin: 4px 0;')
 
-        def _active_robot_click(e=None):
-            message_emit.last_command_time_1 = now()
+        def _active_robot_click(e):
+            timestamp_ns = int(float(e.args['timeStamp']) * 1_000_000)
+            message_emit.last_command_time_1 = timestamp_ns + ui_state.client_clock_offset_ns
             success = message_emit.active_robot()
 
             if success:
@@ -81,17 +84,18 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
             else:
                 ui.notify('Failed to send Create marker', position='top')
         
-        button = ui.button('Active Robot', icon='settings_remote', on_click=_active_robot_click).props('flat outlined').classes('w-full').style(
+        button = ui.button('Active Robot', icon='settings_remote').props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
             'min-height: 50px;'
-        )
+        ).on('click', _active_robot_click, args=['timeStamp'])
 
         ui_state.active_robot_button =  button
         
         ui.separator().style('margin: 4px 0;')
 
-        def _upward_click(e=None):
-            message_emit.last_command_time_1 = now()
+        def _upward_click(e):
+            timestamp_ns = int(float(e.args['timeStamp']) * 1_000_000)
+            message_emit.last_command_time_1 = timestamp_ns + ui_state.client_clock_offset_ns
             success = message_emit.move_upward_robot()
 
             if success:
@@ -99,9 +103,9 @@ def create_navigation_controls(message_emit, ui_state: DashboardUI):
             else:
                 ui.notify('Failed to move robot upward', position='top')
 
-        button = ui.button('Move Upward Robot', icon='arrow_upward', on_click=_upward_click).props('flat outlined').classes('w-full').style(
+        button = ui.button('Move Upward Robot', icon='arrow_upward').props('flat outlined').classes('w-full').style(
             'font-size: 0.9rem; '
             'min-height: 50px;'
-        )
+        ).on('click', _upward_click, args=['timeStamp'])
 
         ui_state.upward_robot_button =  button

@@ -112,6 +112,28 @@ def index():
     ui_state = DashboardUI()
     client_manager.register(ui_state)
     
+    # Measure client-server offset.
+    # performance.timeOrigin + performance.now() is exactly what Date.now() returns,
+    # but e.timeStamp from Vue events is just the performance.now() offset.
+    # We synchronize JS performance.now() to Python perf_counter_ns().
+    async def synchronize_clock():
+        try:
+            t1 = time.perf_counter_ns()
+            client_now_ms = await ui.run_javascript('performance.now()', timeout=2)
+            t2 = time.perf_counter_ns()
+            
+            if client_now_ms is not None:
+                # Approximate server time when the JS executed (midpoint of RTT)
+                server_time_at_js = (t1 + t2) // 2
+                client_time_ns_at_js = int(float(client_now_ms) * 1_000_000)
+                ui_state.client_clock_offset_ns = server_time_at_js - client_time_ns_at_js
+                
+                print(f"[LATENCY] Client clock synchronized. Offset: {ui_state.client_clock_offset_ns/1e6:.2f} ms")
+        except Exception as e:
+            print(f"Failed to synchronize clock: {e}")
+            
+    ui.timer(0.5, synchronize_clock, once=True)
+    
     # Register cleanup on disconnect
     ui.context.client.on_disconnect(lambda: client_manager.unregister(ui_state))
 

@@ -234,8 +234,9 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                 ui.separator().classes('my-2')
                 
                 # ===== Action Buttons =====
-                def save_config():
+                def save_config(e):
                     """Save configuration and optionally send to neuronavigation."""
+                    timestamp_ns = int(float(e.args['timeStamp']) * 1_000_000)
                     
                     # Update robot_config from inputs
                     robot_config.use_force_sensor = inputs['use_force_sensor'].value
@@ -288,7 +289,14 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                     
                     # Send to neuronavigation if message_emit available
                     if message_emit is not None:
-                        message_emit.last_command_time_1 = now()
+                        # Grab ui_state from arguments or global clients context to sync time
+                        # Since open_robot_config is a dialog, we find the active client offset
+                        active_offset = 0
+                        for client_ui in __import__('src.tms_dashboard.nicegui_app.run', fromlist=['client_manager']).client_manager.get_all():
+                            active_offset = client_ui.client_clock_offset_ns
+                            break
+                        
+                        message_emit.last_command_time_1 = timestamp_ns + active_offset
                         success = message_emit.send_robot_config(robot_config)
                         if success:
                             ui.notify('Configuration saved and sent to robot', type='positive', position='top')
@@ -301,7 +309,7 @@ async def open_robot_config(robot_config: RobotConfigState, message_emit: Messag
                 
                 with ui.row().classes('w-full justify-end gap-2 sticky bottom-0 bg-white pt-2'):
                     ui.button('Cancel', on_click=dialog.close).props('outline')
-                    ui.button('Save & Apply', on_click=save_config, icon='save').props('color=primary')
+                    ui.button('Save & Apply', icon='save').props('color=primary').on('click', save_config, args=['timeStamp'])
         
         await dialog
     else:
